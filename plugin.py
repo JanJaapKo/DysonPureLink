@@ -123,8 +123,8 @@ class DysonPureLink:
             Domoticz.Device(Name='Dust', Unit=self.particlesUnit, TypeName="Air Quality").Create()
 
         #read out parameters
-        self.ip_address = Parameters["Address"].replace(" ", "")
-        self.port_number = int(Parameters["Port"].replace(" ", ""))
+        self.ip_address = Parameters["Address"].strip()
+        self.port_number = Parameters["Port"].strip()
         self.serial_number = Parameters['Username']
         self.device_type = Parameters['Mode1']
         self.password = Parameters['Password']
