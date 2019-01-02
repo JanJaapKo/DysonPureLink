@@ -1,5 +1,5 @@
 # Dyson Pure Link - Domoticz Python plugin
-Domoticz plugin t ointegrate the Dyson PureLink devices
+Domoticz plugin to integrate the Dyson PureLink devices
 
 ## Prerequisites
 
@@ -18,6 +18,7 @@ git pull https://github.com/JanJaapKo/DysonPureLink
 4. Set your MQTT server address and port to plugin settings
 
 
-##Credits
-based on info from the following sourcers:
+## Credits
+
+based on info from the following sources:
 https://www.hackster.io/uladzislau-bayouski/merge-the-dyson-link-b763c3
