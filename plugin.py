@@ -3,12 +3,12 @@
 # Author: Jan-Jaap Kostelijk
 #
 """
-<plugin key="DysonPureLink2" name="Dyson Pure Link 2" author="jan-jaap kostelijk" version="1.0.0" >
+<plugin key="DysonPureLink" name="Dyson Pure Link" author="Jan-Jaap Kostelijk" version="1.0.0" >
     <description>
         <h2>Dyson Pure Link plugin</h2><br/>
         Connects to Dyson Pure Link device, CoolLink 475<br/>
         reads states and sensors for now<br/>
-		Has been tested with type 475, assumed the others work too. Dikke vette yoyo!
+		Has been tested with type 475, assumed the others work too.
     </description>
     <params>
 		<param field="Address" label="IP Address" width="200px" required="true" default="192.168.1.15"/>
@@ -22,6 +22,7 @@
         </param>
 		<param field="Username" label="Dyson Serial No." default="NN2-EU-JEA3830A" required="true"/>
 		<param field="Password" label="Dyson Password (see machine)" required="true" password="true"/>
+        <param field="Mode3" label="MQTT Client ID (optional)" width="300px" required="false" default=""/>
 		<param field="Mode5" label="Update count (10 sec)" default="3" required="true"/>
 		<param field="Mode4" label="Debug" width="75px">
             <options>
@@ -128,10 +129,11 @@ class DysonPureLink:
         self.device_type = Parameters['Mode1']
         self.password = Parameters['Password']
         self.base_topic = "{0}/{1}/command".format(self.device_type, self.serial_number)
+        mqtt_client_id = Parameters["Mode3"].strip()
 
 
         #create the connection
-        self.mqttClient = MqttClient(self.ip_address, self.port_number, self.onMQTTConnected, self.onMQTTDisconnected, self.onMQTTPublish, self.onMQTTSubscribed)
+        self.mqttClient = MqttClient(self.ip_address, self.port_number, mqtt_client_id, self.onMQTTConnected, self.onMQTTDisconnected, self.onMQTTPublish, self.onMQTTSubscribed)
         
         # Connect device and print result
         #Domoticz.Log('Connected: ' + str(self.connect_device()))

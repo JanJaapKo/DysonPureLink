@@ -21,4 +21,5 @@ git pull https://github.com/JanJaapKo/DysonPureLink
 ## Credits
 
 based on info from the following sources:
-https://www.hackster.io/uladzislau-bayouski/merge-the-dyson-link-b763c3
+
+- https://www.hackster.io/uladzislau-bayouski/merge-the-dyson-link-b763c3
