@@ -20,7 +20,7 @@
                 <option label="475" value="475" default="true"/>
             </options>
         </param>
-		<param field="Mode2" label="Dyson Serial No." default="NN2-EU-JEA3830A" required="true"/>
+		<param field="Username" label="Dyson Serial No." default="NN2-EU-JEA3830A" required="true"/>
 		<param field="Password" label="Dyson Password (see machine)" required="true" password="true"/>
 		<param field="Mode5" label="Update count (10 sec)" default="3" required="true"/>
 		<param field="Mode4" label="Debug" width="75px">
@@ -34,14 +34,14 @@
 """
 
 import Domoticz
-import base64, json, hashlib, os, time
+import json
+import time
+#import base64, hashlib, os
 from mqtt import MqttClient
-#from run_plugin import DysonWrapper
 
 from value_types import CONNECTION_STATE, DISCONNECTION_STATE, FanMode, StandbyMonitoring, ConnectionError, DisconnectionError, SensorsData, StateData
-#from dyson_pure_link_device import DysonPureLinkDevice
 
-class DysonPureLink2:
+class DysonPureLink:
     #define class variables
     enabled = False
     IThinkIAmConnected = False
@@ -124,7 +124,7 @@ class DysonPureLink2:
         #read out parameters
         self.ip_address = Parameters["Address"].replace(" ", "")
         self.port_number = int(Parameters["Port"].replace(" ", ""))
-        self.serial_number = Parameters['Mode2']
+        self.serial_number = Parameters['Username']
         self.device_type = Parameters['Mode1']
         self.password = Parameters['Password']
         self.base_topic = "{0}/{1}/command".format(self.device_type, self.serial_number)
@@ -147,16 +147,7 @@ class DysonPureLink2:
         
         
     def onStop(self):
-        Domoticz.Log("DysonPureLink plugin: onStop called")
-
-    def onConnect(self, Connection, Status, Description):
-        self.mqttClient.onConnect(Connection, Status, Description)
-
-    def onDisconnect(self, Connection):
-        self.mqttClient.onDisconnect(Connection)
-
-    def onMessage(self, Connection, Data):
-        self.mqttClient.onMessage(Connection, Data)
+        Domoticz.Debug("onStop called")
 
     def onCommand(self, Unit, Command, Level, Hue):
         Domoticz.Log("DysonPureLink plugin: onCommand called for Unit " + str(Unit) + ": Parameter '" + str(Command) + "', Level: " + str(Level))
@@ -169,18 +160,21 @@ class DysonPureLink2:
             if Level >=30: arg="AUTO"
             #self.myWrapper.setFan(self.IThinkIAmConnected,arg) 
 
+    def onConnect(self, Connection, Status, Description):
+        Domoticz.Debug("onConnect called")
+        self.mqttClient.onConnect(Connection, Status, Description)
+
+    def onDisconnect(self, Connection):
+        self.mqttClient.onDisconnect(Connection)
+
+    def onMessage(self, Connection, Data):
+        self.mqttClient.onMessage(Connection, Data)
+
     def onNotification(self, Name, Subject, Text, Status, Priority, Sound, ImageFile):
         Domoticz.Log("DysonPureLink plugin: onNotification: " + Name + "," + Subject + "," + Text + "," + Status + "," + str(Priority) + "," + Sound + "," + ImageFile)
 
     def onHeartbeat(self):
-        Domoticz.Debug("Heartbeating...")
-
-        # Reconnect if connection has dropped
-        if self.mqttClient.mqttConn is None or (not self.mqttClient.mqttConn.Connecting() and not self.mqttClient.mqttConn.Connected() or not self.mqttClient.isConnected):
-            Domoticz.Debug("Reconnecting")
-            self.mqttClient.Open()
-        else:
-            self.mqttClient.Ping()
+        self.mqttClient.onHeartbeat()
 
     def onDeviceRemoved(self):
         Domoticz.Log("DysonPureLink plugin: onDeviceRemoved called")
@@ -264,7 +258,6 @@ def onStop():
 
 def onConnect(Connection, Status, Description):
     global _plugin
-    Domoticz.Debug("base plugin onConnect")
     _plugin.onConnect(Connection, Status, Description)
 
 def onDisconnect(Connection):
@@ -273,12 +266,11 @@ def onDisconnect(Connection):
 
 def onMessage(Connection, Data):
     global _plugin
-    Domoticz.Debug("base plugin onMessage")
     _plugin.onMessage(Connection, Data)
 
-def onCommand(Unit, Command, Level, Hue):
+def onCommand(Unit, Command, Level, Color):
     global _plugin
-    _plugin.onCommand(Unit, Command, Level, Hue)
+    _plugin.onCommand(Unit, Command, Level, Color)
 
 def onNotification(Name, Subject, Text, Status, Priority, Sound, ImageFile):
     global _plugin
