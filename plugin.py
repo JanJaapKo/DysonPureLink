@@ -138,15 +138,6 @@ class DysonPureLink:
         # Connect device and print result
         #Domoticz.Log('Connected: ' + str(self.connect_device()))
         self.IThinkIAmConnected = False
-        #self.IThinkIAmConnected = self.myWrapper.getConnected()
-        #Domoticz.Log('onStart: Connected: ' + str(self.IThinkIAmConnected))
-        
-        #(self.state_data, self.sensor_data) = self.myWrapper.getUpdate(self.IThinkIAmConnected)
-        #Domoticz.Debug("onStart: " + str(self.state_data))
-        #Domoticz.Debug("onStart: " + str(self.sensor_data))
-        
-        #self.updateAllDevices()
-        
         
     def onStop(self):
         Domoticz.Debug("onStop called")
