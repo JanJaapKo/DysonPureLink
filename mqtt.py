@@ -39,7 +39,9 @@ class MqttClient:
 
         protocol = "MQTTS" if self.port == "8883" else "MQTT"
 
+        Domoticz.Debug("MqttClient::Open: setup onnection object")
         self.mqttConn = Domoticz.Connection(Name=self.address, Transport="TCP/IP", Protocol=protocol, Address=self.address, Port=self.port)
+        Domoticz.Debug("MqttClient::Open: open connection")
         self.mqttConn.Connect()
 
     def Connect(self):

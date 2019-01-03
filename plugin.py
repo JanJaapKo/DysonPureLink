@@ -11,7 +11,7 @@
 		Has been tested with type 475, assumed the others work too.
     </description>
     <params>
-		<param field="Address" label="IP Address" width="200px" required="true" default="192.168.1.15"/>
+		<param field="Address" label="IP Address" width="200px" required="true" default="192.168.86.23"/>
 		<param field="Port" label="Port" width="30px" required="true" default="1883"/>
 		<param field="Mode1" label="Dyson type (Pure Cool only at this moment)">
             <options>
