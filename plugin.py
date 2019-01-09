@@ -26,6 +26,7 @@
 		<param field="Mode5" label="Update count (10 sec)" default="3" required="true"/>
 		<param field="Mode4" label="Debug" width="75px">
             <options>
+                <option label="Verbose" value="Verbose"/>
                 <option label="True" value="Debug" default="true"/>
                 <option label="False" value="Normal"/>
             </options>
@@ -78,6 +79,9 @@ class DysonPureLink:
         Domoticz.Log("onStart called")
         if Parameters['Mode4'] == 'Debug':
             Domoticz.Debugging(1)
+            DumpConfigToLog()
+        if Parameters['Mode4'] == 'Verbose':
+            Domoticz.Debugging(2+4+8+16+64)
             DumpConfigToLog()
         
         #PureLink needs polling, get from config
