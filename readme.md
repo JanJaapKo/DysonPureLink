@@ -11,6 +11,10 @@ none....
 ```
 cd domoticz/plugins
 git clone https://github.com/JanJaapKo/DysonPureLink
+```
+to update:
+```
+cd domoticz/plugins/DysonPureLink
 git pull https://github.com/JanJaapKo/DysonPureLink
 ```
 2. Restart domoticz
