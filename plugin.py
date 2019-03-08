@@ -38,7 +38,7 @@
 import Domoticz
 import json
 import time
-#import base64, hashlib, os
+import base64, hashlib
 from mqtt import MqttClient
 
 from value_types import CONNECTION_STATE, DISCONNECTION_STATE, FanMode, StandbyMonitoring, ConnectionError, DisconnectionError, SensorsData, StateData
@@ -131,6 +131,7 @@ class DysonPureLink:
         self.port_number = Parameters["Port"].strip()
         self.serial_number = Parameters['Username']
         self.device_type = Parameters['Mode1']
+        Parameters['Password'] = self._hashed_password(Parameters['Password'])
         self.password = Parameters['Password']
         self.base_topic = "{0}/{1}/command".format(self.device_type, self.serial_number)
         mqtt_client_id = Parameters["Mode3"].strip()
@@ -223,6 +224,12 @@ class DysonPureLink:
         if (topic == self.base_topic + '/bridge/log'):
             if message['type'] == 'devices':
                 Domoticz.Log('Received available devices list from bridge')
+
+    def _hashed_password(pwd):
+        """Hash password (found in manual) to a base64 encoded of its shad512 value"""
+        hash = hashlib.sha512()
+        hash.update(pwd.encode('utf-8'))
+        return base64.b64encode(hash.digest()).decode('utf-8')
 
 
 # def UpdateDevice(Unit, nValue, sValue, BatteryLevel=255, AlwaysUpdate=False):
