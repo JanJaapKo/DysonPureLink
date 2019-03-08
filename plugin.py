@@ -225,7 +225,7 @@ class DysonPureLink:
             if message['type'] == 'devices':
                 Domoticz.Log('Received available devices list from bridge')
 
-    def _hashed_password(pwd):
+    def _hashed_password(self, pwd):
         """Hash password (found in manual) to a base64 encoded of its shad512 value"""
         hash = hashlib.sha512()
         hash.update(pwd.encode('utf-8'))
