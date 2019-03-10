@@ -131,8 +131,11 @@ class DysonPureLink:
         self.port_number = Parameters["Port"].strip()
         self.serial_number = Parameters['Username']
         self.device_type = Parameters['Mode1']
+        Domoticz.Debug("Password field: " + Parameters['Password'])
         self.password = self._hashed_password(Parameters['Password'])
+        Domoticz.Debug("self.Password: " + self.password)
         Parameters['Password'] = self.password #override the default password with the hased variant
+        Domoticz.Debug("Password field: " + Parameters['Password'])
         self.base_topic = "{0}/{1}/command".format(self.device_type, self.serial_number)
         mqtt_client_id = Parameters["Mode3"].strip()
 
