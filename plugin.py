@@ -40,14 +40,13 @@ import json
 import time
 import base64, hashlib
 from mqtt import MqttClient
+from dyson_pure_link_device import DysonPureLink
 
 from value_types import CONNECTION_STATE, DISCONNECTION_STATE, FanMode, StandbyMonitoring, ConnectionError, DisconnectionError, SensorsData, StateData
 
-class DysonPureLink:
+class DysonPureLinkPlugin:
     #define class variables
     enabled = False
-    IThinkIAmConnected = False
-    #myWrapper = None
     mqttClient = None
     #unit numbers for devices to create
     #for Pure Cool models
@@ -136,17 +135,12 @@ class DysonPureLink:
         Domoticz.Debug("START: self.Password: " + self.password)
         Parameters['Password'] = self.password #override the default password with the hased variant
         Domoticz.Debug("START: Password field hashed: " + Parameters['Password'])
-        self.base_topic = "{0}/{1}/command".format(self.device_type, self.serial_number)
+        self.base_topic = "{0}/{1}".format(self.device_type, self.serial_number)
         mqtt_client_id = Parameters["Mode3"].strip()
-
 
         #create the connection
         self.mqttClient = MqttClient(self.ip_address, self.port_number, mqtt_client_id, self.onMQTTConnected, self.onMQTTDisconnected, self.onMQTTPublish, self.onMQTTSubscribed)
-        
-        # Connect device and print result
-        #Domoticz.Log('Connected: ' + str(self.connect_device()))
-        self.IThinkIAmConnected = False
-        
+    
     def onStop(self):
         Domoticz.Debug("onStop called")
 
@@ -206,7 +200,7 @@ class DysonPureLink:
             
 
     def onMQTTConnected(self):
-        self.mqttClient.Subscribe([self.base_topic + '/#'])
+        self.mqttClient.Subscribe([self.base_topic + '/#']) #subscribe to topics on the machine
 
     def onMQTTDisconnected(self):
         Domoticz.Debug("onMQTTDisconnected")
@@ -215,18 +209,28 @@ class DysonPureLink:
         Domoticz.Debug("onMQTTSubscribed")
 
     def onMQTTPublish(self, topic, message):
-        Domoticz.Debug("MQTT Publish 1: MQTT message: " + topic + " " + str(message))
+        Domoticz.Debug("MQTT Publish: MQTT message incoming: " + topic + " " + str(message))
 
-        if (topic == self.base_topic + '/bridge/state'):
-            if message == 'online':
-                self.mqttClient.Publish(self.base_topic + '/bridge/config/devices', '')
+        if (topic == self.base_topic + '/status/current'):
+            #update of the machine's status
+            if message['msg'] == 'CURRENT-STATE':
+                Domoticz.Debug("machine state recieved")
+            if message['msg'] == 'ENVIRONMENTAL-CURRENT-SENSOR-DATA':
+                Domoticz.Debug("sensor state recieved")
+            if message['msg'] == 'STATE-CHANGE':
+                Domoticz.Debug("state change recieved")
 
-            Domoticz.Log('Zigbee2mqtt bridge is ' + message)
-            return
+        if (topic == self.base_topic + '/status/connection'):
+            #connection status received
+            Domoticz.Debug("connection state recieved")
 
-        if (topic == self.base_topic + '/bridge/log'):
-            if message['type'] == 'devices':
-                Domoticz.Log('Received available devices list from bridge')
+        if (topic == self.base_topic + '/status/software'):
+            #connection status received
+            Domoticz.Debug("software state recieved")
+            
+        if (topic == self.base_topic + '/status/summary'):
+            #connection status received
+            Domoticz.Debug("summary state recieved")
 
     def _hashed_password(self, pwd):
         """Hash password (found in manual) to a base64 encoded of its shad512 value"""
@@ -253,7 +257,7 @@ class DysonPureLink:
 
         
 global _plugin
-_plugin = DysonPureLink()
+_plugin = DysonPureLinkPlugin()
 
 def onStart():
     global _plugin
