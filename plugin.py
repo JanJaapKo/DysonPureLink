@@ -73,12 +73,12 @@ class DysonPureLinkPlugin:
         self.sensor_data = None
         self.state_data = None
         self.mqttClient = None
-        self.dyson_pure_link = None
 
     def onStart(self):
         Domoticz.Log("onStart called")
         if Parameters['Mode4'] == 'Debug':
-            Domoticz.Debugging(2)
+            Domoticz.Debugging(1)
+            DumpConfigToLog()
         if Parameters['Mode4'] == 'Verbose':
             Domoticz.Debugging(2+4+8+16+64)
             DumpConfigToLog()
@@ -141,9 +141,6 @@ class DysonPureLinkPlugin:
         #create the connection
         self.mqttClient = MqttClient(self.ip_address, self.port_number, mqtt_client_id, self.onMQTTConnected, self.onMQTTDisconnected, self.onMQTTPublish, self.onMQTTSubscribed)
     
-        #create the dyson device class
-        self.dyson_pure_link = DysonPureLinkDevice(self.password, self.serial_number, self.device_type, self.ip_address, self.port_number)
-        
     def onStop(self):
         Domoticz.Debug("onStop called")
 
@@ -210,8 +207,6 @@ class DysonPureLinkPlugin:
 
     def onMQTTSubscribed(self):
         Domoticz.Debug("onMQTTSubscribed")
-        #subscription established, ask for update
-        self.mqttClient.Publish(self.dyson_pure_link.device_command, self.dyson_pure_link.request_state())
 
     def onMQTTPublish(self, topic, message):
         Domoticz.Debug("MQTT Publish: MQTT message incoming: " + topic + " " + str(message))
