@@ -1,11 +1,9 @@
-#!/usr/bin/python
-
 # Based on https://github.com/emontnemery/domoticz_mqtt_discovery
 import Domoticz
 import time
 import json
 
-class MqttClient():
+class MqttClient:
     Address = ""
     Port = ""
     mqttConn = None
