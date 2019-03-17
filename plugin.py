@@ -3,12 +3,12 @@
 # Author: Jan-Jaap Kostelijk
 #
 """
-<plugin key="DysonPureLink" name="Dyson Pure Link" author="Jan-Jaap Kostelijk" version="1.0.0" >
+<plugin key="DysonPureLink" name="Dyson Pure Link" author="Jan-Jaap Kostelijk" version="1.0.1" >
     <description>
         <h2>Dyson Pure Link plugin</h2><br/>
-        Connects to Dyson Pure Link device, CoolLink 475<br/>
+        Connects to Dyson Pure Link devices<br/>
         reads states and sensors for now<br/>
-		Has been tested with type 475, assumed the others work too.
+		Has been tested with type 475, assumed the others work too.<br>
     </description>
     <params>
 		<param field="Address" label="IP Address" width="200px" required="true" default="192.168.86.23"/>
@@ -241,21 +241,21 @@ class DysonPureLinkPlugin:
         return base64.b64encode(hash.digest()).decode('utf-8')
 
 
-# def UpdateDevice(Unit, nValue, sValue, BatteryLevel=255, AlwaysUpdate=False):
-    # if Unit not in Devices: return
-    # if Devices[Unit].nValue != nValue\
-        # or Devices[Unit].sValue != sValue\
-        # or Devices[Unit].BatteryLevel != BatteryLevel\
-        # or AlwaysUpdate == True:
+def UpdateDevice(Unit, nValue, sValue, BatteryLevel=255, AlwaysUpdate=False):
+    if Unit not in Devices: return
+    if Devices[Unit].nValue != nValue\
+        or Devices[Unit].sValue != sValue\
+        or Devices[Unit].BatteryLevel != BatteryLevel\
+        or AlwaysUpdate == True:
 
-        # Devices[Unit].Update(nValue, str(sValue), BatteryLevel=BatteryLevel)
+        Devices[Unit].Update(nValue, str(sValue), BatteryLevel=BatteryLevel)
 
-        # Domoticz.Debug("Update %s: nValue %s - sValue %s - BatteryLevel %s" % (
-            # Devices[Unit].Name,
-            # nValue,
-            # sValue,
-            # BatteryLevel
-        # ))
+        Domoticz.Debug("Update %s: nValue %s - sValue %s - BatteryLevel %s" % (
+            Devices[Unit].Name,
+            nValue,
+            sValue,
+            BatteryLevel
+        ))
 
         
 global _plugin
