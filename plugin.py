@@ -8,7 +8,7 @@
         <h2>Dyson Pure Link plugin</h2><br/>
         Connects to Dyson Pure Link devices<br/>
         reads states and sensors for now<br/>
-		Has been tested with type 475, assumed the others work too.<br>
+		Has been tested with type 475, assumed the others work too.<br/>
     </description>
     <params>
 		<param field="Address" label="IP Address" width="200px" required="true" default="192.168.1.15"/>
@@ -246,6 +246,7 @@ class DysonPureLinkPlugin:
             if SensorsData.is_sensors_data(message):
                 Domoticz.Debug("sensor state recieved")
                 self.sensor_data = SensorsData(message)
+                self.updateSensors()
 
         if (topic == self.base_topic + '/status/connection'):
             #connection status received
