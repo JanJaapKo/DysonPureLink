@@ -1,6 +1,6 @@
 """Dyson Pure Link Device Logic"""
 
-import base64, json, hashlib, os, time
+import json, os, time
 import Domoticz
 
 from value_types import CONNECTION_STATE, DISCONNECTION_STATE, FanMode, StandbyMonitoring, ConnectionError, DisconnectionError, SensorsData, StateData
@@ -82,13 +82,6 @@ class DysonPureLinkDevice(object):
             # self.client.publish(self.device_command, command, 1)
 
             # self.state_data = self.state_data_available.get(timeout=5)
-
-    def _hashed_password(self):
-        """Hash password (found in manual) to a base64 encoded of its shad512 value"""
-        hash = hashlib.sha512()
-        hash.update(self.password.encode('utf-8'))
-        return base64.b64encode(hash.digest()).decode('utf-8')
-        
 
     def set_fan_mode(self, mode):
         """Changes fan mode: ON|OFF|AUTO"""

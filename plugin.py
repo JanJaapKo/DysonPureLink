@@ -137,6 +137,9 @@ class DysonPureLinkPlugin:
 
         #create the connection
         self.mqttClient = MqttClient(self.ip_address, self.port_number, mqtt_client_id, self.onMQTTConnected, self.onMQTTDisconnected, self.onMQTTPublish, self.onMQTTSubscribed)
+        
+        #create a Dyson device object
+        self.dyson_pure_link = DysonPureLinkDevice(self.password, self.serial_number, self.device_type, self.ip_address, self.port_number)
     
     def onStop(self):
         Domoticz.Debug("onStop called")
@@ -197,7 +200,9 @@ class DysonPureLinkPlugin:
             
 
     def onMQTTConnected(self):
+        """connection to device established"""
         self.mqttClient.Subscribe([self.base_topic + '/#']) #subscribe to topics on the machine
+        self.dyson_pure_link.request_data() #ask for update of current status
 
     def onMQTTDisconnected(self):
         Domoticz.Debug("onMQTTDisconnected")
