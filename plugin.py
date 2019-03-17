@@ -11,7 +11,7 @@
 		Has been tested with type 475, assumed the others work too.<br>
     </description>
     <params>
-		<param field="Address" label="IP Address" width="200px" required="true" default="192.168.86.23"/>
+		<param field="Address" label="IP Address" width="200px" required="true" default="192.168.1.15"/>
 		<param field="Port" label="Port" width="30px" required="true" default="1883"/>
 		<param field="Mode1" label="Dyson type (Pure Cool only at this moment)">
             <options>
@@ -174,35 +174,39 @@ class DysonPureLinkPlugin:
     def onDeviceRemoved(self):
         Domoticz.Log("DysonPureLink plugin: onDeviceRemoved called")
     
-    def updateAllDevices(self):
+    def updateDevices(self):
         """Update the defined devices from incoming mesage info"""
         #update the devices
-        pass
-        # tempNum = int(self.sensor_data.temperature)
-        # humNum = int(self.sensor_data.humidity)
-        # UpdateDevice(self.fanOscillationUnit, self.state_data.oscillation.state, str(self.state_data.oscillation))
-        # UpdateDevice(self.nightModeUnit, self.state_data.night_mode.state, str(self.state_data.night_mode))
-        # UpdateDevice(self.tempHumUnit, 1, str(self.sensor_data.temperature)[:4] +';'+ str(self.sensor_data.humidity) + ";1")
-        # UpdateDevice(self.volatileUnit, self.sensor_data.volatile_compounds, str(self.sensor_data.volatile_compounds))
-        # UpdateDevice(self.particlesUnit, self.sensor_data.particles, str(self.sensor_data.particles))
+        UpdateDevice(self.fanOscillationUnit, self.state_data.oscillation.state, str(self.state_data.oscillation))
+        UpdateDevice(self.nightModeUnit, self.state_data.night_mode.state, str(self.state_data.night_mode))
 
-        # # Fan speed  
-        # f_rate = self.state_data.fan_speed
-        # if (f_rate == "AUTO"):
-            # sValueNew = "110" # Auto
-        # else:
-            # sValueNew = str(int(f_rate) * 10)
+        # Fan speed  
+        f_rate = self.state_data.fan_speed
+        if (f_rate == "AUTO"):
+            sValueNew = "110" # Auto
+        else:
+            sValueNew = str(int(f_rate) * 10)
 
-        # UpdateDevice(self.fanSpeedUnit, 1, sValueNew)
-        # UpdateDevice(self.fanModeUnit, self.state_data.fan_mode.state, str((self.state_data.fan_mode.state+1)*10))
-        # UpdateDevice(self.fanStateUnit, self.state_data.fan_state.state, str((self.state_data.fan_state.state+1)*10))
-        # UpdateDevice(self.filterLifeUnit, self.state_data.filter_life, str(self.state_data.filter_life))
+        UpdateDevice(self.fanSpeedUnit, 1, sValueNew)
+        UpdateDevice(self.fanModeUnit, self.state_data.fan_mode.state, str((self.state_data.fan_mode.state+1)*10))
+        UpdateDevice(self.fanStateUnit, self.state_data.fan_state.state, str((self.state_data.fan_state.state+1)*10))
+        UpdateDevice(self.filterLifeUnit, self.state_data.filter_life, str(self.state_data.filter_life))
+
+    def updateSensors(self):
+        """Update the defined devices from incoming mesage info"""
+        #update the devices
+        tempNum = int(self.sensor_data.temperature)
+        humNum = int(self.sensor_data.humidity)
+        UpdateDevice(self.tempHumUnit, 1, str(self.sensor_data.temperature)[:4] +';'+ str(self.sensor_data.humidity) + ";1")
+        UpdateDevice(self.volatileUnit, self.sensor_data.volatile_compounds, str(self.sensor_data.volatile_compounds))
+        UpdateDevice(self.particlesUnit, self.sensor_data.particles, str(self.sensor_data.particles))
             
 
     def onMQTTConnected(self):
         """connection to device established"""
         self.mqttClient.Subscribe([self.base_topic + '/#']) #subscribe to topics on the machine
-        self.dyson_pure_link.request_data() #ask for update of current status
+        topic, payload = self.dyson_pure_link.request_state()
+        self.mqttClient.Publish(topic, payload) #ask for update of current status
 
     def onMQTTDisconnected(self):
         Domoticz.Debug("onMQTTDisconnected")
@@ -210,17 +214,38 @@ class DysonPureLinkPlugin:
     def onMQTTSubscribed(self):
         Domoticz.Debug("onMQTTSubscribed")
 
+        
+            # def on_message(self, client, userdata, message):
+        # """Static callback to handle incoming messages"""
+        # print("onMessage called")
+        # payload = message.payload.decode("utf-8")
+        # print("message payload: ",payload)
+        # json_message = json.loads(payload)
+        # #print("message received: ",json_message)
+        
+        # if StateData.is_state_data(json_message):
+            # #print("on_message statedata received") 
+            # userdata.state_data_available.put_nowait(StateData(json_message))
+
+        # if SensorsData.is_sensors_data(json_message):
+            # #print("on_message sensordata received") 
+            # userdata.sensor_data_available.put_nowait(SensorsData(json_message))
+
+        
+        
+        
     def onMQTTPublish(self, topic, message):
         Domoticz.Debug("MQTT Publish: MQTT message incoming: " + topic + " " + str(message))
 
         if (topic == self.base_topic + '/status/current'):
             #update of the machine's status
-            if message['msg'] == 'CURRENT-STATE':
-                Domoticz.Debug("machine state recieved")
-            if message['msg'] == 'ENVIRONMENTAL-CURRENT-SENSOR-DATA':
+            if StateData.is_state_data(message):
+                Domoticz.Debug("machine state or state change recieved")
+                self.state_data = StateData(message)
+                self.updateDevices()
+            if SensorsData.is_sensors_data(message):
                 Domoticz.Debug("sensor state recieved")
-            if message['msg'] == 'STATE-CHANGE':
-                Domoticz.Debug("state change recieved")
+                self.sensor_data = SensorsData(message)
 
         if (topic == self.base_topic + '/status/connection'):
             #connection status received

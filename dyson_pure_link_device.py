@@ -54,16 +54,15 @@ class DysonPureLinkDevice(object):
     def device_status(self):
         return '{0}/{1}/status/current'.format(self.device_type, self.serial_number)
 
-    def _request_state(self):
-        """Publishes request for current state message"""
-        Domoticz.Debug("dyson_pure_link_device: _request_state called")
-        # if self.client:
-            # command = json.dumps({
-                    # 'msg': 'REQUEST-CURRENT-STATE',
-                    # 'time': time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime())})
+    def request_state(self):
+        """creates request for current state message"""
+        Domoticz.Debug("dyson_pure_link_device: request_state called")
+        command = json.dumps({
+                'msg': 'REQUEST-CURRENT-STATE',
+                'time': time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime())})
             
-            # Domoticz.Debug("_request_state command built")
-            # self.client.publish(self.device_command, command);
+        Domoticz.Debug("request_state command built")
+        return(self.device_command, command);
 
     def _change_state(self, data):
         """Publishes request for change state message"""
@@ -102,25 +101,3 @@ class DysonPureLinkDevice(object):
     def set_oscilation(self, mode):
         """Changes oscilation mode: ON|OFF"""
         self._change_state({'oson': mode})
-
-    def get_data(self):
-        Domoticz.Debug("dyson_pure_link_device: get_data called")
-        self._request_state()
-
-        #self.state_data = self.state_data_available.get(timeout=5)
-        #self.sensor_data = self.sensor_data_available.get(timeout=5)
-
-        # Return True in case of successful connect and data retrieval
-        #Domoticz.Debug("dyson_pure_link_device: get_data, state_data: " + str(self.state_data))
-        return (self.state_data, self.sensor_data) if self.has_valid_data else tuple()
-
-    def request_data(self):
-        """send requets for new data to device"""
-        self._request_state()
-
-        #self.state_data = self.state_data_available.get(timeout=5)
-        #self.sensor_data = self.sensor_data_available.get(timeout=5)
-
-        # Return data in case of successful connect and data retrieval
-        return (self.state_data, self.sensor_data) if self.has_valid_data else ('noValidData','noValidData')
-        
