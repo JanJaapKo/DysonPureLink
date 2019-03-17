@@ -77,7 +77,7 @@ class DysonPureLinkPlugin:
     def onStart(self):
         Domoticz.Log("onStart called")
         if Parameters['Mode4'] == 'Debug':
-            Domoticz.Debugging(1)
+            Domoticz.Debugging(2)
             DumpConfigToLog()
         if Parameters['Mode4'] == 'Verbose':
             Domoticz.Debugging(2+4+8+16+64)
@@ -130,11 +130,8 @@ class DysonPureLinkPlugin:
         self.port_number = Parameters["Port"].strip()
         self.serial_number = Parameters['Username']
         self.device_type = Parameters['Mode1']
-        Domoticz.Debug("START: Password field: " + Parameters['Password'])
         self.password = self._hashed_password(Parameters['Password'])
-        Domoticz.Debug("START: self.Password: " + self.password)
         Parameters['Password'] = self.password #override the default password with the hased variant
-        Domoticz.Debug("START: Password field hashed: " + Parameters['Password'])
         self.base_topic = "{0}/{1}".format(self.device_type, self.serial_number)
         mqtt_client_id = Parameters["Mode3"].strip()
 
