@@ -7,11 +7,11 @@
     <description>
         <h2>Dyson Pure Link plugin</h2><br/>
         Connects to Dyson Pure Link devices<br/>
-        reads states and sensors for now<br/>
-		Has been tested with type 475, assumed the others work too.<br/>
+        It reads states and sensors (for now), control via commands to be added<br/>
+		Has been tested with type 475, assumed the others (455, 465) work too.<br/>
     </description>
     <params>
-		<param field="Address" label="IP Address" width="200px" required="true" default="192.168.1.15"/>
+		<param field="Address" label="IP Address" width="200px" required="true"/>
 		<param field="Port" label="Port" width="30px" required="true" default="1883"/>
 		<param field="Mode1" label="Dyson type (Pure Cool only at this moment)">
             <options>
@@ -20,15 +20,15 @@
                 <option label="475" value="475" default="true"/>
             </options>
         </param>
-		<param field="Username" label="Dyson Serial No." default="NN2-EU-JEA3830A" required="true"/>
+		<param field="Username" label="Dyson Serial No." required="true"/>
 		<param field="Password" label="Dyson Password (see machine)" required="true" password="true"/>
         <param field="Mode3" label="MQTT Client ID (optional)" width="300px" required="false" default=""/>
 		<param field="Mode5" label="Update count (10 sec)" default="6" required="true"/>
 		<param field="Mode4" label="Debug" width="75px">
             <options>
                 <option label="Verbose" value="Verbose"/>
-                <option label="True" value="Debug" default="true"/>
-                <option label="False" value="Normal"/>
+                <option label="True" value="Debug"/>
+                <option label="False" value="Normal" default="true"/>
             </options>
         </param>
     </params>
