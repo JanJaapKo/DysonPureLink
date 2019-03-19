@@ -3,15 +3,15 @@
 # Author: Jan-Jaap Kostelijk
 #
 """
-<plugin key="DysonPureLink" name="Dyson Pure Link" author="Jan-Jaap Kostelijk" version="1.0.0" >
+<plugin key="DysonPureLink" name="Dyson Pure Link" author="Jan-Jaap Kostelijk" version="1.0.1" >
     <description>
         <h2>Dyson Pure Link plugin</h2><br/>
-        Connects to Dyson Pure Link device, CoolLink 475<br/>
+        Connects to Dyson Pure Link devices<br/>
         reads states and sensors for now<br/>
-		Has been tested with type 475, assumed the others work too.
+		Has been tested with type 475, assumed the others work too.<br/>
     </description>
     <params>
-		<param field="Address" label="IP Address" width="200px" required="true" default="192.168.86.23"/>
+		<param field="Address" label="IP Address" width="200px" required="true" default="192.168.1.15"/>
 		<param field="Port" label="Port" width="30px" required="true" default="1883"/>
 		<param field="Mode1" label="Dyson type (Pure Cool only at this moment)">
             <options>
@@ -23,7 +23,7 @@
 		<param field="Username" label="Dyson Serial No." default="NN2-EU-JEA3830A" required="true"/>
 		<param field="Password" label="Dyson Password (see machine)" required="true" password="true"/>
         <param field="Mode3" label="MQTT Client ID (optional)" width="300px" required="false" default=""/>
-		<param field="Mode5" label="Update count (10 sec)" default="3" required="true"/>
+		<param field="Mode5" label="Update count (10 sec)" default="6" required="true"/>
 		<param field="Mode4" label="Debug" width="75px">
             <options>
                 <option label="Verbose" value="Verbose"/>
@@ -77,7 +77,7 @@ class DysonPureLinkPlugin:
     def onStart(self):
         Domoticz.Log("onStart called")
         if Parameters['Mode4'] == 'Debug':
-            Domoticz.Debugging(1)
+            Domoticz.Debugging(2)
             DumpConfigToLog()
         if Parameters['Mode4'] == 'Verbose':
             Domoticz.Debugging(2+4+8+16+64)
@@ -130,16 +130,16 @@ class DysonPureLinkPlugin:
         self.port_number = Parameters["Port"].strip()
         self.serial_number = Parameters['Username']
         self.device_type = Parameters['Mode1']
-        Domoticz.Debug("START: Password field: " + Parameters['Password'])
         self.password = self._hashed_password(Parameters['Password'])
-        Domoticz.Debug("START: self.Password: " + self.password)
         Parameters['Password'] = self.password #override the default password with the hased variant
-        Domoticz.Debug("START: Password field hashed: " + Parameters['Password'])
         self.base_topic = "{0}/{1}".format(self.device_type, self.serial_number)
         mqtt_client_id = Parameters["Mode3"].strip()
 
         #create the connection
         self.mqttClient = MqttClient(self.ip_address, self.port_number, mqtt_client_id, self.onMQTTConnected, self.onMQTTDisconnected, self.onMQTTPublish, self.onMQTTSubscribed)
+        
+        #create a Dyson device object
+        self.dyson_pure_link = DysonPureLinkDevice(self.password, self.serial_number, self.device_type, self.ip_address, self.port_number)
     
     def onStop(self):
         Domoticz.Debug("onStop called")
@@ -170,37 +170,53 @@ class DysonPureLinkPlugin:
 
     def onHeartbeat(self):
         self.mqttClient.onHeartbeat()
+        self.runCounter = self.runCounter - 1
+        if self.runCounter <= 0:
+            Domoticz.Debug("DysonPureLink plugin: Poll unit")
+            self.runCounter = int(Parameters["Mode5"])
+            topic, payload = self.dyson_pure_link.request_state()
+            self.mqttClient.Publish(topic, payload) #ask for update of current status
+            
+        else:
+            Domoticz.Debug("Polling unit in " + str(self.runCounter) + " heartbeats.")
 
     def onDeviceRemoved(self):
         Domoticz.Log("DysonPureLink plugin: onDeviceRemoved called")
     
-    def updateAllDevices(self):
+    def updateDevices(self):
         """Update the defined devices from incoming mesage info"""
         #update the devices
-        pass
-        # tempNum = int(self.sensor_data.temperature)
-        # humNum = int(self.sensor_data.humidity)
-        # UpdateDevice(self.fanOscillationUnit, self.state_data.oscillation.state, str(self.state_data.oscillation))
-        # UpdateDevice(self.nightModeUnit, self.state_data.night_mode.state, str(self.state_data.night_mode))
-        # UpdateDevice(self.tempHumUnit, 1, str(self.sensor_data.temperature)[:4] +';'+ str(self.sensor_data.humidity) + ";1")
-        # UpdateDevice(self.volatileUnit, self.sensor_data.volatile_compounds, str(self.sensor_data.volatile_compounds))
-        # UpdateDevice(self.particlesUnit, self.sensor_data.particles, str(self.sensor_data.particles))
+        UpdateDevice(self.fanOscillationUnit, self.state_data.oscillation.state, str(self.state_data.oscillation))
+        UpdateDevice(self.nightModeUnit, self.state_data.night_mode.state, str(self.state_data.night_mode))
 
-        # # Fan speed  
-        # f_rate = self.state_data.fan_speed
-        # if (f_rate == "AUTO"):
-            # sValueNew = "110" # Auto
-        # else:
-            # sValueNew = str(int(f_rate) * 10)
+        # Fan speed  
+        f_rate = self.state_data.fan_speed
+        if (f_rate == "AUTO"):
+            sValueNew = "110" # Auto
+        else:
+            sValueNew = str(int(f_rate) * 10)
 
-        # UpdateDevice(self.fanSpeedUnit, 1, sValueNew)
-        # UpdateDevice(self.fanModeUnit, self.state_data.fan_mode.state, str((self.state_data.fan_mode.state+1)*10))
-        # UpdateDevice(self.fanStateUnit, self.state_data.fan_state.state, str((self.state_data.fan_state.state+1)*10))
-        # UpdateDevice(self.filterLifeUnit, self.state_data.filter_life, str(self.state_data.filter_life))
-            
+        UpdateDevice(self.fanSpeedUnit, 1, sValueNew)
+        UpdateDevice(self.fanModeUnit, self.state_data.fan_mode.state, str((self.state_data.fan_mode.state+1)*10))
+        UpdateDevice(self.fanStateUnit, self.state_data.fan_state.state, str((self.state_data.fan_state.state+1)*10))
+        UpdateDevice(self.filterLifeUnit, self.state_data.filter_life, str(self.state_data.filter_life))
+
+    def updateSensors(self):
+        """Update the defined devices from incoming mesage info"""
+        #update the devices
+        tempNum = int(self.sensor_data.temperature)
+        humNum = int(self.sensor_data.humidity)
+        UpdateDevice(self.tempHumUnit, 1, str(self.sensor_data.temperature)[:4] +';'+ str(self.sensor_data.humidity) + ";1")
+        UpdateDevice(self.volatileUnit, self.sensor_data.volatile_compounds, str(self.sensor_data.volatile_compounds))
+        UpdateDevice(self.particlesUnit, self.sensor_data.particles, str(self.sensor_data.particles))
+        Domoticz.Debug("update SensorData: " + str(self.sensor_data))
+        Domoticz.Debug("update StateData: " + str(self.state_data))
 
     def onMQTTConnected(self):
+        """connection to device established"""
         self.mqttClient.Subscribe([self.base_topic + '/#']) #subscribe to topics on the machine
+        topic, payload = self.dyson_pure_link.request_state()
+        self.mqttClient.Publish(topic, payload) #ask for update of current status
 
     def onMQTTDisconnected(self):
         Domoticz.Debug("onMQTTDisconnected")
@@ -208,17 +224,39 @@ class DysonPureLinkPlugin:
     def onMQTTSubscribed(self):
         Domoticz.Debug("onMQTTSubscribed")
 
+        
+            # def on_message(self, client, userdata, message):
+        # """Static callback to handle incoming messages"""
+        # print("onMessage called")
+        # payload = message.payload.decode("utf-8")
+        # print("message payload: ",payload)
+        # json_message = json.loads(payload)
+        # #print("message received: ",json_message)
+        
+        # if StateData.is_state_data(json_message):
+            # #print("on_message statedata received") 
+            # userdata.state_data_available.put_nowait(StateData(json_message))
+
+        # if SensorsData.is_sensors_data(json_message):
+            # #print("on_message sensordata received") 
+            # userdata.sensor_data_available.put_nowait(SensorsData(json_message))
+
+        
+        
+        
     def onMQTTPublish(self, topic, message):
         Domoticz.Debug("MQTT Publish: MQTT message incoming: " + topic + " " + str(message))
 
         if (topic == self.base_topic + '/status/current'):
             #update of the machine's status
-            if message['msg'] == 'CURRENT-STATE':
-                Domoticz.Debug("machine state recieved")
-            if message['msg'] == 'ENVIRONMENTAL-CURRENT-SENSOR-DATA':
+            if StateData.is_state_data(message):
+                Domoticz.Debug("machine state or state change recieved")
+                self.state_data = StateData(message)
+                self.updateDevices()
+            if SensorsData.is_sensors_data(message):
                 Domoticz.Debug("sensor state recieved")
-            if message['msg'] == 'STATE-CHANGE':
-                Domoticz.Debug("state change recieved")
+                self.sensor_data = SensorsData(message)
+                self.updateSensors()
 
         if (topic == self.base_topic + '/status/connection'):
             #connection status received
@@ -239,21 +277,21 @@ class DysonPureLinkPlugin:
         return base64.b64encode(hash.digest()).decode('utf-8')
 
 
-# def UpdateDevice(Unit, nValue, sValue, BatteryLevel=255, AlwaysUpdate=False):
-    # if Unit not in Devices: return
-    # if Devices[Unit].nValue != nValue\
-        # or Devices[Unit].sValue != sValue\
-        # or Devices[Unit].BatteryLevel != BatteryLevel\
-        # or AlwaysUpdate == True:
+def UpdateDevice(Unit, nValue, sValue, BatteryLevel=255, AlwaysUpdate=False):
+    if Unit not in Devices: return
+    if Devices[Unit].nValue != nValue\
+        or Devices[Unit].sValue != sValue\
+        or Devices[Unit].BatteryLevel != BatteryLevel\
+        or AlwaysUpdate == True:
 
-        # Devices[Unit].Update(nValue, str(sValue), BatteryLevel=BatteryLevel)
+        Devices[Unit].Update(nValue, str(sValue), BatteryLevel=BatteryLevel)
 
-        # Domoticz.Debug("Update %s: nValue %s - sValue %s - BatteryLevel %s" % (
-            # Devices[Unit].Name,
-            # nValue,
-            # sValue,
-            # BatteryLevel
-        # ))
+        Domoticz.Debug("Update %s: nValue %s - sValue %s - BatteryLevel %s" % (
+            Devices[Unit].Name,
+            nValue,
+            sValue,
+            BatteryLevel
+        ))
 
         
 global _plugin
