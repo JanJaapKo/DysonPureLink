@@ -23,7 +23,7 @@
 		<param field="Username" label="Dyson Serial No." default="NN2-EU-JEA3830A" required="true"/>
 		<param field="Password" label="Dyson Password (see machine)" required="true" password="true"/>
         <param field="Mode3" label="MQTT Client ID (optional)" width="300px" required="false" default=""/>
-		<param field="Mode5" label="Update count (10 sec)" default="3" required="true"/>
+		<param field="Mode5" label="Update count (10 sec)" default="6" required="true"/>
 		<param field="Mode4" label="Debug" width="75px">
             <options>
                 <option label="Verbose" value="Verbose"/>
@@ -170,6 +170,15 @@ class DysonPureLinkPlugin:
 
     def onHeartbeat(self):
         self.mqttClient.onHeartbeat()
+        self.runCounter = self.runCounter - 1
+        if self.runCounter <= 0:
+            Domoticz.Debug("DysonPureLink plugin: Poll unit")
+            self.runCounter = int(Parameters["Mode5"])
+            topic, payload = self.dyson_pure_link.request_state()
+            self.mqttClient.Publish(topic, payload) #ask for update of current status
+            
+        else:
+            Domoticz.Debug("Polling unit in " + str(self.runCounter) + " heartbeats.")
 
     def onDeviceRemoved(self):
         Domoticz.Log("DysonPureLink plugin: onDeviceRemoved called")
@@ -200,7 +209,8 @@ class DysonPureLinkPlugin:
         UpdateDevice(self.tempHumUnit, 1, str(self.sensor_data.temperature)[:4] +';'+ str(self.sensor_data.humidity) + ";1")
         UpdateDevice(self.volatileUnit, self.sensor_data.volatile_compounds, str(self.sensor_data.volatile_compounds))
         UpdateDevice(self.particlesUnit, self.sensor_data.particles, str(self.sensor_data.particles))
-            
+        Domoticz.Debug("update SensorData: " + str(self.sensor_data))
+        Domoticz.Debug("update StateData: " + str(self.state_data))
 
     def onMQTTConnected(self):
         """connection to device established"""
