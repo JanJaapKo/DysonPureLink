@@ -125,7 +125,7 @@ class DysonPureLinkPlugin:
         if self.particlesUnit not in Devices:
             Domoticz.Device(Name='Dust', Unit=self.particlesUnit, TypeName="Air Quality").Create()
         if self.sleepTimeUnit not in Devices:
-            Domoticz.Device(Name='Sleep timer', Unit=self.sleepTimeUnit, TypeName="Counter").Create()
+            Domoticz.Device(Name='Sleep timer', Unit=self.sleepTimeUnit, TypeName="Custom").Create()
 
         #read out parameters
         self.ip_address = Parameters["Address"].strip()
