@@ -21,6 +21,7 @@ git pull https://github.com/JanJaapKo/DysonPureLink
 3. Go to "Hardware" page and add new item with type "DysonPureLink"
 4. Set your MQTT server address and port to plugin settings
 
+See the Wiki page for more information
 
 ## Credits
 
