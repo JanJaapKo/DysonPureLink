@@ -51,7 +51,6 @@ class DysonPureLinkPlugin:
     #unit numbers for devices to create
     #for Pure Cool models
     fanModeUnit = 1
-    fanStateUnit = 12
     nightModeUnit = 2
     fanSpeedUnit = 3
     fanOscillationUnit = 4
@@ -62,6 +61,7 @@ class DysonPureLinkPlugin:
     volatileUnit = 9
     particlesUnit = 10
     sleepTimeUnit = 11
+    fanStateUnit = 12
     runCounter = 0
 
     def __init__(self):
@@ -124,6 +124,8 @@ class DysonPureLinkPlugin:
             Domoticz.Device(Name='Volatile organic', Unit=self.volatileUnit, TypeName="Air Quality").Create()
         if self.particlesUnit not in Devices:
             Domoticz.Device(Name='Dust', Unit=self.particlesUnit, TypeName="Air Quality").Create()
+        if self.sleepTimeUnit not in Devices:
+            Domoticz.Device(Name='Sleep timer', Unit=self.sleepTimeUnit, TypeName="Custom").Create()
 
         #read out parameters
         self.ip_address = Parameters["Address"].strip()
@@ -209,6 +211,7 @@ class DysonPureLinkPlugin:
         UpdateDevice(self.tempHumUnit, 1, str(self.sensor_data.temperature)[:4] +';'+ str(self.sensor_data.humidity) + ";1")
         UpdateDevice(self.volatileUnit, self.sensor_data.volatile_compounds, str(self.sensor_data.volatile_compounds))
         UpdateDevice(self.particlesUnit, self.sensor_data.particles, str(self.sensor_data.particles))
+        UpdateDevice(self.sleepTimeUnit, self.sensor_data.sleep_timer, str(self.sensor_data.sleep_timer))
         Domoticz.Debug("update SensorData: " + str(self.sensor_data))
         Domoticz.Debug("update StateData: " + str(self.state_data))
 
