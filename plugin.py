@@ -226,26 +226,6 @@ class DysonPureLinkPlugin:
 
     def onMQTTSubscribed(self):
         Domoticz.Debug("onMQTTSubscribed")
-
-        
-            # def on_message(self, client, userdata, message):
-        # """Static callback to handle incoming messages"""
-        # print("onMessage called")
-        # payload = message.payload.decode("utf-8")
-        # print("message payload: ",payload)
-        # json_message = json.loads(payload)
-        # #print("message received: ",json_message)
-        
-        # if StateData.is_state_data(json_message):
-            # #print("on_message statedata received") 
-            # userdata.state_data_available.put_nowait(StateData(json_message))
-
-        # if SensorsData.is_sensors_data(json_message):
-            # #print("on_message sensordata received") 
-            # userdata.sensor_data_available.put_nowait(SensorsData(json_message))
-
-        
-        
         
     def onMQTTPublish(self, topic, message):
         Domoticz.Debug("MQTT Publish: MQTT message incoming: " + topic + " " + str(message))
@@ -279,7 +259,6 @@ class DysonPureLinkPlugin:
         hash.update(pwd.encode('utf-8'))
         return base64.b64encode(hash.digest()).decode('utf-8')
 
-
 def UpdateDevice(Unit, nValue, sValue, BatteryLevel=255, AlwaysUpdate=False):
     if Unit not in Devices: return
     if Devices[Unit].nValue != nValue\
@@ -295,7 +274,6 @@ def UpdateDevice(Unit, nValue, sValue, BatteryLevel=255, AlwaysUpdate=False):
             sValue,
             BatteryLevel
         ))
-
         
 global _plugin
 _plugin = DysonPureLinkPlugin()
@@ -338,9 +316,10 @@ def onDeviceRemoved():
 
     # Generic helper functions
 def DumpConfigToLog():
+    Domoticz.Debug("Parameter count: " + str(len(Parameters)))
     for x in Parameters:
         if Parameters[x] != "":
-            Domoticz.Debug( "'" + x + "':'" + str(Parameters[x]) + "'")
+            Domoticz.Debug( "Parameter '" + x + "':'" + str(Parameters[x]) + "'")
     Domoticz.Debug("Device count: " + str(len(Devices)))
     for x in Devices:
         Domoticz.Debug("Device:           " + str(x) + " - " + str(Devices[x]))
