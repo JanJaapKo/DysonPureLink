@@ -148,14 +148,24 @@ class DysonPureLinkPlugin:
 
     def onCommand(self, Unit, Command, Level, Hue):
         Domoticz.Log("DysonPureLink plugin: onCommand called for Unit " + str(Unit) + ": Parameter '" + str(Command) + "', Level: " + str(Level))
+        topic = ''
+        payload = ''
         if Unit == self.fanSpeedUnit and Level<=100:
             arg="0000"+str(Level//10)
-            #self.myWrapper.setSpeed(self.IThinkIAmConnected,arg[-4:]) #use last 4 characters as speed level or AUTO
+            topic, payload = self.dyson_pure_link.set_fan_speed(arg[-4:]) #use last 4 characters as speed level or AUTO
         if Unit == self.fanModeUnit or (Unit == self.fanSpeedUnit and Level>100):
             if Level == 10: arg="OFF"
             if Level == 20: arg="FAN"
             if Level >=30: arg="AUTO"
-            #self.myWrapper.setFan(self.IThinkIAmConnected,arg) 
+            topic, payload = self.dyson_pure_link.set_fan_mode(arg) 
+        if Unit == self.fanStateUnit :
+            if Level == 10: arg="OFF"
+            if Level == 20: arg="ON"
+            topic, payload = self.dyson_pure_link.set_fan_state(arg) 
+        if Unit == self.fanOscillationUnit :
+            topic, payload = self.dyson_pure_link.set_oscilation(str(Command).upper()) 
+            
+        self.mqttClient.Publish(topic, payload)
 
     def onConnect(self, Connection, Status, Description):
         Domoticz.Debug("onConnect called")

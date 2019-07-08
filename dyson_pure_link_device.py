@@ -64,40 +64,43 @@ class DysonPureLinkDevice(object):
         Domoticz.Debug("request_state command built")
         return(self.device_command, command);
 
-    def _change_state(self, data):
-        """Publishes request for change state message"""
-        Domoticz.Debug("dyson_pure_link_device: _change_state called")
-        # if self.client:
-            
-            # command = json.dumps({
-                # 'msg': 'STATE-SET',
-                # 'time': time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime()),
-                # 'mode-reason': 'LAPP',
-                # 'data': data
-            # })
-            
-            # Domoticz.Log("send MQTT command: " + command)
-
-            # self.client.publish(self.device_command, command, 1)
-
-            # self.state_data = self.state_data_available.get(timeout=5)
+    def _create_command(self, data):
+        """create change state message"""
+        Domoticz.Debug("dyson_pure_link_device: _create_command called")
+        command = json.dumps({
+            'msg': 'STATE-SET',
+            'mode-reason': 'LAPP',
+            'data': data,
+            'time': time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime())
+        })
+        return command
 
     def set_fan_mode(self, mode):
         """Changes fan mode: ON|OFF|AUTO|FAN"""
         self._change_state({'fmod': mode})
+        return(self.device_command, command);
+
+    def set_fan_state(self, state):
+        """Changes fan mode: ON|OFF|AUTO"""
+        command = self._create_command({'fnst': state})
+        return(self.device_command, command);
 
     def set_fan_speed(self, speed):
         """Changes fan speed: 0001..0010|AUTO"""
-        self._change_state({'fnsp': speed})
+        command = self._create_command({'fnsp': speed})
+        return(self.device_command, command);
 
     def set_standby_monitoring(self, mode):
         """Changes standby monitoring: ON|OFF"""
-        self._change_state({'rhtm': mode})
+        command = self._create_command({'rhtm': mode})
+        return(self.device_command, command);
 
     def set_night_mode(self, mode):
         """Changes night mode: ON|OFF"""
-        self._change_state({'nmod': mode})
+        command = self._create_command({'nmod': mode})
+        return(self.device_command, command);
 
     def set_oscilation(self, mode):
         """Changes oscilation mode: ON|OFF"""
-        self._change_state({'oson': mode})
+        command = self._create_command({'oson': mode})
+        return(self.device_command, command);
