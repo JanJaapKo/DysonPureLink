@@ -83,7 +83,7 @@ class DysonPureLinkDevice(object):
             # self.state_data = self.state_data_available.get(timeout=5)
 
     def set_fan_mode(self, mode):
-        """Changes fan mode: ON|OFF|AUTO"""
+        """Changes fan mode: ON|OFF|AUTO|FAN"""
         self._change_state({'fmod': mode})
 
     def set_fan_speed(self, speed):

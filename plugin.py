@@ -153,7 +153,7 @@ class DysonPureLinkPlugin:
             #self.myWrapper.setSpeed(self.IThinkIAmConnected,arg[-4:]) #use last 4 characters as speed level or AUTO
         if Unit == self.fanModeUnit or (Unit == self.fanSpeedUnit and Level>100):
             if Level == 10: arg="OFF"
-            if Level == 20: arg="ON"
+            if Level == 20: arg="FAN"
             if Level >=30: arg="AUTO"
             #self.myWrapper.setFan(self.IThinkIAmConnected,arg) 
 
