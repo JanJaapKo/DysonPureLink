@@ -77,7 +77,7 @@ class DysonPureLinkDevice(object):
 
     def set_fan_mode(self, mode):
         """Changes fan mode: ON|OFF|AUTO|FAN"""
-        self._change_state({'fmod': mode})
+        command = self._create_command({'fmod': mode})
         return(self.device_command, command);
 
     def set_fan_state(self, state):
