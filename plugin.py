@@ -7,8 +7,8 @@
     <description>
         <h2>Dyson Pure Link plugin</h2><br/>
         Connects to Dyson Pure Link devices<br/>
-        It reads states and sensors (for now), control via commands to be added<br/>
-		Has been tested with type 475, assumed the others (except 469, see open issue) work too.<br/>
+        It reads states and sensors and control via commands<br/>
+		Has been tested with type 475, assumed the others (except 469 and 527, see open issue) work too.<br/>
     </description>
     <params>
 		<param field="Address" label="IP Address" width="200px" required="true"/>
