@@ -21,7 +21,6 @@ class DysonPureLinkDevice(object):
     @property
     def has_valid_data(self):
         return self.sensor_data and self.sensor_data.has_data
-        #return self.state_data.has_data and self.sensor_data.has_data
     
     def is_connected(self):
         return self._is_connected

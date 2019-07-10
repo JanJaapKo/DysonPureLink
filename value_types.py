@@ -19,7 +19,6 @@ DISCONNECTION_STATE = {
 
 class FanMode():
     """Enum for fan mode"""
-
     OFF = 'OFF'
     ON = 'ON'
     AUTO = 'AUTO'
@@ -27,12 +26,10 @@ class FanMode():
     
     def __init__(self, state):
         """go from string to state object"""
-        #print("FanMode:init:state",state)
         if state.upper() == 'OFF': self._state = self.OFF
         if state.upper() == 'FAN': self._state = self.ON
         if state.upper() == 'ON': self._state = self.ON
         if state.upper() == 'AUTO': self._state = self.AUTO
-        #print("FanMode:init:_state",self._state)
     
     def __repr__(self):
         return self._state
@@ -50,8 +47,6 @@ class StandbyMonitoring(object):
     OFF = 'OFF'
 
 """Custom Errors"""
-
-
 class ConnectionError(Exception):
     """Custom error to handle connect device issues"""
 
@@ -115,9 +110,6 @@ class StateData(object):
     def __init__(self, message):
         data = message['product-state']
         
-        #print("StateData.init: incoming data: ", data)
-        #print("StateData.init: incoming message: ", message)
-
         self.fan_mode = FanMode(self._get_field_value(data['fmod'])) #  ON, OFF, AUTO, (FAN?)
         self.fan_state = FanMode(self._get_field_value(data['fnst'])) # ON , OFF, (FAN?)
         self.night_mode = FanMode(self._get_field_value(data['nmod'])) # ON , OFF
@@ -128,8 +120,6 @@ class StateData(object):
         self.standby_monitoring = FanMode(self._get_field_value(data['rhtm'])) # ON, OFF
         self.error_code = self._get_field_value(data['ercd']) #I think this is an errorcode: NONE when filter needs replacement
         self.warning_code = self._get_field_value(data['wacd']) #I think this is Warning: FLTR when filter needs replacement
-        #print("StateData.init: all message fields parsed.")
-        
 
     def __repr__(self):
         """Return a String representation"""
