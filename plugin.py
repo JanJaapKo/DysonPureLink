@@ -266,7 +266,7 @@ class DysonPureLinkPlugin:
             Domoticz.Debug("summary state recieved")
 
     def _hashed_password(self, pwd):
-        """Hash password (found in manual) to a base64 encoded of its shad512 value"""
+        """Hash password (found in manual) to a base64 encoded of its sha512 value"""
         hash = hashlib.sha512()
         hash.update(pwd.encode('utf-8'))
         return base64.b64encode(hash.digest()).decode('utf-8')
