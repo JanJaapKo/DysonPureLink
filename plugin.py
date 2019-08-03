@@ -135,7 +135,7 @@ class DysonPureLinkPlugin:
         self.serial_number = Parameters['Username']
         self.device_type = Parameters['Mode1']
         self.password = self._hashed_password(Parameters['Password'])
-        Parameters['Password'] = self.password #override the default password with the hased variant
+        Parameters['Password'] = self.password #override the default password with the hashed variant, Domoticz connection object uses this
         self.base_topic = "{0}/{1}".format(self.device_type, self.serial_number)
         mqtt_client_id = Parameters["Mode3"].strip()
 
@@ -171,7 +171,9 @@ class DysonPureLinkPlugin:
 
     def onConnect(self, Connection, Status, Description):
         Domoticz.Debug("onConnect called")
+        Domoticz.Debug("onConnect returns 1: Connection '"+str(Connection)+"', Status: '"+str(Status)+"', Description: '"+Description+"'")
         self.mqttClient.onConnect(Connection, Status, Description)
+        Domoticz.Debug("onConnect returns 2: Connection '"+str(Connection)+"', Status: '"+str(Status)+"', Description: '"+Description+"'")
 
     def onDisconnect(self, Connection):
         self.mqttClient.onDisconnect(Connection)
