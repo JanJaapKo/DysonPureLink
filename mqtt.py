@@ -39,9 +39,8 @@ class MqttClient:
 
         protocol = "MQTTS" if self.port == "8883" else "MQTT"
 
-        Domoticz.Debug("MqttClient::Open: setup onnection object")
+        Domoticz.Debug("MqttClient::Open: setup Domoticz connection object with protocol: '"+protocol+"'")
         self.mqttConn = Domoticz.Connection(Name=self.address, Transport="TCP/IP", Protocol=protocol, Address=self.address, Port=self.port)
-        #self.mqttConn = Domoticz.Connection(Name=self.address, Transport="TCP/IP", Address=self.address, Port=self.port)
         Domoticz.Debug("MqttClient::Open: open connection")
         self.mqttConn.Connect()
 
@@ -50,7 +49,7 @@ class MqttClient:
         if (self.mqttConn == None):
             self.Open()
         else:
-            Domoticz.Debug("MQTT CONNECT ID: '" + self.client_id + "'")
+            Domoticz.Debug("MqttClient::MQTT CONNECT ID: '" + self.client_id + "'")
             self.mqttConn.Send({'Verb': 'CONNECT', 'ID': self.client_id})
 
     def Ping(self):
@@ -85,10 +84,10 @@ class MqttClient:
 
     def onConnect(self, Connection, Status, Description):
         if (Status == 0):
-            Domoticz.Debug("MQTT connected successfully.")
+            Domoticz.Debug("MqttClient::MQTT connected successfully.")
             self.Connect()
         else:
-            Domoticz.Log("Failed to connect to: " + Connection.Address + ":" + Connection.Port + ", Description: " + Description)
+            Domoticz.Log("MqttClient::Failed to connect to: " + Connection.Address + ":" + Connection.Port + ", Description: " + Description)
 
     def onDisconnect(self, Connection):
         Domoticz.Debug("MqttClient::onDisonnect Disconnected from: " + Connection.Address+":" + Connection.Port)
@@ -105,6 +104,7 @@ class MqttClient:
             self.Ping()
 
     def onMessage(self, Connection, Data):
+        Domoticz.Debug("MqttClient::onMessage called")
         topic = ''
         if 'Topic' in Data:
             topic = Data['Topic']
@@ -113,6 +113,7 @@ class MqttClient:
             payloadStr = Data['Payload'].decode('utf8','replace')
             payloadStr = str(payloadStr.encode('unicode_escape'))
 
+        Domoticz.Debug("MqttClient::onMessage Topic '"+topic+"', Data[Verb]: '"+Data['Verb']+"'")
         if Data['Verb'] == "CONNACK":
             self.isConnected = True
             if self.mqttConnectedCb != None:
