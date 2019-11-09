@@ -24,8 +24,8 @@
         </param>
 		<param field="Username" label="Dyson Serial No." required="true"/>
 		<param field="Password" label="Dyson Password (see machine)" required="true" password="true"/>
-        <param field="Mode3" label="MQTT Client ID (optional)" width="300px" required="false" default=""/>
-		<param field="Mode5" label="Update count (10 sec)" default="6" required="true"/>
+        <param field="Mode3" label="Dyson account password" width="300px" required="false" default=""/>
+		<param field="Mode5" label="Dyson account email adress" default="sinterklaas@gmail.com" required="true"/>
 		<param field="Mode4" label="Debug" width="75px">
             <options>
                 <option label="Verbose" value="Verbose"/>
@@ -43,7 +43,7 @@ import time
 import base64, hashlib
 from mqtt import MqttClient
 from dyson_pure_link_device import DysonPureLinkDevice
-
+from dyson import DysonAccount
 from value_types import CONNECTION_STATE, DISCONNECTION_STATE, FanMode, StandbyMonitoring, ConnectionError, DisconnectionError, SensorsData, StateData
 
 class DysonPureLinkPlugin:
@@ -135,9 +135,28 @@ class DysonPureLinkPlugin:
         self.serial_number = Parameters['Username']
         self.device_type = Parameters['Mode1']
         self.password = self._hashed_password(Parameters['Password'])
-        Parameters['Password'] = self.password #override the default password with the hased variant
-        self.base_topic = "{0}/{1}".format(self.device_type, self.serial_number)
-        mqtt_client_id = Parameters["Mode3"].strip()
+        
+        #create a Dyson account
+        Domoticz.Debug("=== start making connection to Dyson account ===")
+        dysonAccount = DysonAccount(Parameters['Mode5'],Parameters['Mode3'],"NL")
+        dysonAccount.login()
+        deviceList = dysonAccount.devices()
+        if len(deviceList)>0:
+            Domoticz.Debug("number of devices: '"+str(len(deviceList))+"'")
+        else:
+            Domoticz.Debug("no devices found")
+
+        if len(deviceList)==1:
+            self.cloudDevice=deviceList[0]
+
+            Domoticz.Debug("local device pwd:      '"+self.password+"'")
+            Domoticz.Debug("cloud device pwd:      '"+self.cloudDevice.credentials+"'")
+            Parameters['Username'] = self.cloudDevice.serial #take username from account
+            
+            Parameters['Password'] = self.cloudDevice.credentials #self.password #override the default password with the hased variant
+            self.base_topic = "{0}/{1}".format(self.cloudDevice.product_type, self.cloudDevice.serial)
+            mqtt_client_id = ""
+            Domoticz.Debug("base topic defined: '"+self.base_topic+"'")
 
         #create the connection
         self.mqttClient = MqttClient(self.ip_address, self.port_number, mqtt_client_id, self.onMQTTConnected, self.onMQTTDisconnected, self.onMQTTPublish, self.onMQTTSubscribed)
@@ -229,8 +248,10 @@ class DysonPureLinkPlugin:
 
     def onMQTTConnected(self):
         """connection to device established"""
+        Domoticz.Debug("onMQTTConnected called")
         self.mqttClient.Subscribe([self.base_topic + '/#']) #subscribe to topics on the machine
-        topic, payload = self.dyson_pure_link.request_state()
+        payload = self.cloudDevice.request_state()
+        topic = '{0}/{1}/command'.format(self.cloudDevice.product_type, self.cloudDevice.serial)
         self.mqttClient.Publish(topic, payload) #ask for update of current status
 
     def onMQTTDisconnected(self):
