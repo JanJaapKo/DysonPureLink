@@ -82,7 +82,7 @@ class DysonPureLinkPlugin:
             Domoticz.Debugging(2)
             DumpConfigToLog()
         if Parameters['Mode4'] == 'Verbose':
-            Domoticz.Debugging(2+4+8+16+64)
+            Domoticz.Debugging(1+2+4+8+16+64)
             DumpConfigToLog()
         
         #PureLink needs polling, get from config
@@ -173,7 +173,6 @@ class DysonPureLinkPlugin:
         Domoticz.Debug("onConnect called")
         Domoticz.Debug("onConnect returns 1: Connection '"+str(Connection)+"', Status: '"+str(Status)+"', Description: '"+Description+"'")
         self.mqttClient.onConnect(Connection, Status, Description)
-        Domoticz.Debug("onConnect returns 2: Connection '"+str(Connection)+"', Status: '"+str(Status)+"', Description: '"+Description+"'")
 
     def onDisconnect(self, Connection):
         self.mqttClient.onDisconnect(Connection)
