@@ -3,17 +3,36 @@
 # Author: Jan-Jaap Kostelijk
 #
 """
-<plugin key="DysonPureLink" name="Dyson Pure Link" author="Jan-Jaap Kostelijk" version="1.2.0" wikilink="https://github.com/JanJaapKo/DysonPureLink.wiki.git" externallink="https://github.com/JanJaapKo/DysonPureLink">
+<plugin key="DysonPureLink" name="Dyson Pure Link" author="Jan-Jaap Kostelijk" version="2.0.0" wikilink="https://github.com/JanJaapKo/DysonPureLink.wiki.git" externallink="https://github.com/JanJaapKo/DysonPureLink">
     <description>
         <h2>Dyson Pure Link plugin</h2><br/>
         Connects to Dyson Pure Link devices<br/>
-        It reads states and sensors and control via commands<br/>
-		Has been tested with type 475, assumed the others (except 469 and 527, see open issue) work too.<br/>
+        It reads the machines states and sensors and it can control it via commands.<br/><br/>
+		Has been tested with type 475, assumed the others work too.<br/><br/>
+        <h2>Configuration</h2>
+        <ul>
+            <li>Choose one of the following options:</li>
+            <ol type="a">
+                <li>using local credentials as on your Pure Cool Link device</li>
+                <ol>
+                    <li>the machine's IP adress</li>
+                    <li>the port number (should normally remain 1883)</li>
+                    <li>select the correct machine type number</li>
+                    <li>enter the serial number</li>
+                </ol>
+                <li>Using the Dyson account credentials:</li>
+                <ol type="a">
+                    <li>enter the email adress under "Dyson account email adress"</li>
+                    <li>enter the password under "Dyson account password"</li>
+                </ol>
+            </ol>
+        </ul>
+        
     </description>
     <params>
-		<param field="Address" label="IP Address" width="200px" required="true"/>
+		<param field="Address" label="IP Address" required="true"/>
 		<param field="Port" label="Port" width="30px" required="true" default="1883"/>
-		<param field="Mode1" label="Dyson type (Pure Cool only at this moment)">
+		<param field="Mode1" label="Dyson type number" width="75px">
             <options>
                 <option label="455" value="455"/>
                 <option label="465" value="465"/>
@@ -24,13 +43,23 @@
         </param>
 		<param field="Username" label="Dyson Serial No." required="true"/>
 		<param field="Password" label="Dyson Password (see machine)" required="true" password="true"/>
-        <param field="Mode3" label="Dyson account password" width="300px" required="false" default=""/>
-		<param field="Mode5" label="Dyson account email adress" default="sinterklaas@gmail.com" required="true"/>
+		<param field="Mode5" label="Dyson account email adress" default="sinterklaas@gmail.com" width="300px" required="true"/>
+        <param field="Mode3" label="Dyson account password" required="false" default="" password="true"/>
 		<param field="Mode4" label="Debug" width="75px">
             <options>
                 <option label="Verbose" value="Verbose"/>
                 <option label="True" value="Debug"/>
                 <option label="False" value="Normal" default="true"/>
+            </options>
+        </param>
+        <param field="Mode2" label="Refresh interval" width="75px">
+            <options>
+                <option label="10s" value="1"/>
+                <option label="30s" value="3"/>
+                <option label="1m" value="6"/>
+                <option label="5m" value="30" default="true"/>
+                <option label="10m" value="60"/>
+                <option label="15m" value="90"/>
             </options>
         </param>
     </params>
@@ -137,6 +166,7 @@ class DysonPureLinkPlugin:
         self.password = self._hashed_password(Parameters['Password'])
         self.base_topic = "{0}/{1}".format(self.device_type, self.serial_number)
         mqtt_client_id = ""
+        self.runCounter = int(Parameters['Mode2'])
         
         #create a Dyson account
         Domoticz.Debug("=== start making connection to Dyson account ===")
@@ -164,6 +194,7 @@ class DysonPureLinkPlugin:
             #create a Dyson device object
             Domoticz.Debug("local device pwd:      '"+self.password+"'")
             Domoticz.Debug("local device usn:      '"+self.serial_number+"'")
+            Parameters['Password'] = self.password
             self.myDevice = DysonPureLinkDevice(self.password, self.serial_number, self.device_type, self.ip_address, self.port_number)
 
         #create the connection
@@ -215,7 +246,7 @@ class DysonPureLinkPlugin:
         self.runCounter = self.runCounter - 1
         if self.runCounter <= 0:
             Domoticz.Debug("DysonPureLink plugin: Poll unit")
-            self.runCounter = 6
+            self.runCounter = int(Parameters['Mode2'])
             topic, payload = self.myDevice.request_state()
             self.mqttClient.Publish(topic, payload) #ask for update of current status
             
