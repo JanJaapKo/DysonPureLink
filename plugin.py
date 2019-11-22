@@ -3,17 +3,36 @@
 # Author: Jan-Jaap Kostelijk
 #
 """
-<plugin key="DysonPureLink" name="Dyson Pure Link" author="Jan-Jaap Kostelijk" version="1.0.3" wikilink="https://github.com/JanJaapKo/DysonPureLink.wiki.git" externallink="https://github.com/JanJaapKo/DysonPureLink">
+<plugin key="DysonPureLink" name="Dyson Pure Link" author="Jan-Jaap Kostelijk" version="2.0.0" wikilink="https://github.com/JanJaapKo/DysonPureLink.wiki.git" externallink="https://github.com/JanJaapKo/DysonPureLink">
     <description>
         <h2>Dyson Pure Link plugin</h2><br/>
         Connects to Dyson Pure Link devices<br/>
-        It reads states and sensors and control via commands<br/>
-		Has been tested with type 475, assumed the others (except 469 and 527, see open issue) work too.<br/>
+        It reads the machines states and sensors and it can control it via commands.<br/><br/>
+		Has been tested with type 475, assumed the others work too.<br/><br/>
+        <h2>Configuration</h2>
+        <ul>
+            <li>Choose one of the following options:</li>
+            <ol type="a">
+                <li>using local credentials as on your Pure Cool Link device</li>
+                <ol>
+                    <li>the machine's IP adress</li>
+                    <li>the port number (should normally remain 1883)</li>
+                    <li>select the correct machine type number</li>
+                    <li>enter the serial number</li>
+                </ol>
+                <li>Using the Dyson account credentials:</li>
+                <ol type="a">
+                    <li>enter the email adress under "Dyson account email adress"</li>
+                    <li>enter the password under "Dyson account password"</li>
+                </ol>
+            </ol>
+        </ul>
+        
     </description>
     <params>
-		<param field="Address" label="IP Address" width="200px" required="true"/>
+		<param field="Address" label="IP Address" required="true"/>
 		<param field="Port" label="Port" width="30px" required="true" default="1883"/>
-		<param field="Mode1" label="Dyson type (Pure Cool only at this moment)">
+		<param field="Mode1" label="Dyson type number" width="75px">
             <options>
                 <option label="455" value="455"/>
                 <option label="465" value="465"/>
@@ -24,13 +43,23 @@
         </param>
 		<param field="Username" label="Dyson Serial No." required="true"/>
 		<param field="Password" label="Dyson Password (see machine)" required="true" password="true"/>
-        <param field="Mode3" label="Dyson account password" width="300px" required="false" default=""/>
-		<param field="Mode5" label="Dyson account email adress" default="sinterklaas@gmail.com" required="true"/>
+		<param field="Mode5" label="Dyson account email adress" default="sinterklaas@gmail.com" width="300px" required="true"/>
+        <param field="Mode3" label="Dyson account password" required="false" default="" password="true"/>
 		<param field="Mode4" label="Debug" width="75px">
             <options>
                 <option label="Verbose" value="Verbose"/>
                 <option label="True" value="Debug"/>
                 <option label="False" value="Normal" default="true"/>
+            </options>
+        </param>
+        <param field="Mode2" label="Refresh interval" width="75px">
+            <options>
+                <option label="10s" value="1"/>
+                <option label="30s" value="3"/>
+                <option label="1m" value="6"/>
+                <option label="5m" value="30" default="true"/>
+                <option label="10m" value="60"/>
+                <option label="15m" value="90"/>
             </options>
         </param>
     </params>
@@ -64,9 +93,10 @@ class DysonPureLinkPlugin:
     particlesUnit = 10
     sleepTimeUnit = 11
     fanStateUnit = 12
-    runCounter = 0
+    runCounter = 6
 
     def __init__(self):
+        self.myDevice = None
         self.password = None
         self.serial_number = None
         self.device_type = None
@@ -86,7 +116,6 @@ class DysonPureLinkPlugin:
             DumpConfigToLog()
         
         #PureLink needs polling, get from config
-        self.runCounter = int(Parameters["Mode5"])
         Domoticz.Heartbeat(10)
         
         #check, per device, if it is created. If not,create it
@@ -129,40 +158,50 @@ class DysonPureLinkPlugin:
         if self.sleepTimeUnit not in Devices:
             Domoticz.Device(Name='Sleep timer', Unit=self.sleepTimeUnit, TypeName="Custom").Create()
 
-        #read out parameters
+        #read out parameters for local connection
         self.ip_address = Parameters["Address"].strip()
         self.port_number = Parameters["Port"].strip()
         self.serial_number = Parameters['Username']
         self.device_type = Parameters['Mode1']
         self.password = self._hashed_password(Parameters['Password'])
+        self.base_topic = "{0}/{1}".format(self.device_type, self.serial_number)
+        mqtt_client_id = ""
+        self.runCounter = int(Parameters['Mode2'])
         
         #create a Dyson account
         Domoticz.Debug("=== start making connection to Dyson account ===")
         dysonAccount = DysonAccount(Parameters['Mode5'],Parameters['Mode3'],"NL")
         dysonAccount.login()
+        deviceList = ()
         deviceList = dysonAccount.devices()
-        if len(deviceList)>0:
-            Domoticz.Debug("number of devices: '"+str(len(deviceList))+"'")
+        
+        if deviceList == None or len(deviceList)<1:
+            Domoticz.Log("No devices found in Dyson cloud account")
         else:
-            Domoticz.Debug("no devices found")
+            Domoticz.Debug("number of devices: '"+str(len(deviceList))+"'")
 
-        if len(deviceList)==1:
-            self.cloudDevice=deviceList[0]
+        if deviceList != None:
+            self.myDevice=deviceList[0]
 
             Domoticz.Debug("local device pwd:      '"+self.password+"'")
-            Domoticz.Debug("cloud device pwd:      '"+self.cloudDevice.credentials+"'")
-            Parameters['Username'] = self.cloudDevice.serial #take username from account
-            
-            Parameters['Password'] = self.cloudDevice.credentials #self.password #override the default password with the hased variant
-            self.base_topic = "{0}/{1}".format(self.cloudDevice.product_type, self.cloudDevice.serial)
-            mqtt_client_id = ""
+            Domoticz.Debug("cloud device pwd:      '"+self.myDevice.credentials+"'")
+            Parameters['Username'] = self.myDevice.serial #take username from account
+            Parameters['Password'] = self.myDevice.credentials #override the default password with the one returned from the cloud
+            self.base_topic = "{0}/{1}".format(self.myDevice.product_type, self.myDevice.serial)
             Domoticz.Debug("base topic defined: '"+self.base_topic+"'")
+        else:
+            Domoticz.Log("no cloud devices found, try the local credentials will be used")
+            #create a Dyson device object
+            Domoticz.Debug("local device pwd:      '"+self.password+"'")
+            Domoticz.Debug("local device usn:      '"+self.serial_number+"'")
+            Parameters['Password'] = self.password
+            self.myDevice = DysonPureLinkDevice(self.password, self.serial_number, self.device_type, self.ip_address, self.port_number)
 
         #create the connection
         self.mqttClient = MqttClient(self.ip_address, self.port_number, mqtt_client_id, self.onMQTTConnected, self.onMQTTDisconnected, self.onMQTTPublish, self.onMQTTSubscribed)
         
         #create a Dyson device object
-        self.dyson_pure_link = DysonPureLinkDevice(self.password, self.serial_number, self.device_type, self.ip_address, self.port_number)
+        #self.dyson_pure_link = DysonPureLinkDevice(self.password, self.serial_number, self.device_type, self.ip_address, self.port_number)
     
     def onStop(self):
         Domoticz.Debug("onStop called")
@@ -173,18 +212,18 @@ class DysonPureLinkPlugin:
         payload = ''
         if Unit == self.fanSpeedUnit and Level<=100:
             arg="0000"+str(Level//10)
-            topic, payload = self.dyson_pure_link.set_fan_speed(arg[-4:]) #use last 4 characters as speed level or AUTO
+            topic, payload = self.myDevice.set_fan_speed(arg[-4:]) #use last 4 characters as speed level or AUTO
         if Unit == self.fanModeUnit or (Unit == self.fanSpeedUnit and Level>100):
             if Level == 10: arg="OFF"
             if Level == 20: arg="FAN"
             if Level >=30: arg="AUTO"
-            topic, payload = self.dyson_pure_link.set_fan_mode(arg) 
+            topic, payload = self.myDevice.set_fan_mode(arg) 
         if Unit == self.fanStateUnit :
             if Level == 10: arg="OFF"
             if Level == 20: arg="ON"
-            topic, payload = self.dyson_pure_link.set_fan_state(arg) 
+            topic, payload = self.myDevice.set_fan_state(arg) 
         if Unit == self.fanOscillationUnit :
-            topic, payload = self.dyson_pure_link.set_oscilation(str(Command).upper()) 
+            topic, payload = self.myDevice.set_oscilation(str(Command).upper()) 
             
         self.mqttClient.Publish(topic, payload)
 
@@ -207,8 +246,8 @@ class DysonPureLinkPlugin:
         self.runCounter = self.runCounter - 1
         if self.runCounter <= 0:
             Domoticz.Debug("DysonPureLink plugin: Poll unit")
-            self.runCounter = int(Parameters["Mode5"])
-            topic, payload = self.dyson_pure_link.request_state()
+            self.runCounter = int(Parameters['Mode2'])
+            topic, payload = self.myDevice.request_state()
             self.mqttClient.Publish(topic, payload) #ask for update of current status
             
         else:
@@ -251,8 +290,8 @@ class DysonPureLinkPlugin:
         """connection to device established"""
         Domoticz.Debug("onMQTTConnected called")
         self.mqttClient.Subscribe([self.base_topic + '/#']) #subscribe to topics on the machine
-        payload = self.cloudDevice.request_state()
-        topic = '{0}/{1}/command'.format(self.cloudDevice.product_type, self.cloudDevice.serial)
+        topic, payload = self.myDevice.request_state()
+        #topic = '{0}/{1}/command'.format(self.myDevice.product_type, self.myDevice.serial)
         self.mqttClient.Publish(topic, payload) #ask for update of current status
 
     def onMQTTDisconnected(self):

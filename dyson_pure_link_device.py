@@ -13,8 +13,8 @@ class DysonPureLinkDevice(object):
         self.state_data = None
         self._is_connected = False
         self._password = password
-        self._serial_number = serialNumber
-        self._device_type = deviceType
+        self._serial = serialNumber
+        self._product_type = deviceType
         self._ip_address = ipAdress
         self._port_number = int(portNum)
 
@@ -30,12 +30,12 @@ class DysonPureLinkDevice(object):
         return self._password
 
     @property
-    def serial_number(self):
-        return self._serial_number
+    def serial(self):
+        return self._serial
 
     @property
-    def device_type(self):
-        return self._device_type
+    def product_type(self):
+        return self._product_type
 
     @property
     def ip_address(self):
@@ -47,11 +47,11 @@ class DysonPureLinkDevice(object):
 
     @property
     def device_command(self):
-        return '{0}/{1}/command'.format(self.device_type, self.serial_number)
+        return '{0}/{1}/command'.format(self.product_type, self.serial)
 
     @property
     def device_status(self):
-        return '{0}/{1}/status/current'.format(self.device_type, self.serial_number)
+        return '{0}/{1}/status/current'.format(self.product_type, self.serial)
 
     def request_state(self):
         """creates request for current state message"""
