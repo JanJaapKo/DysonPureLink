@@ -83,6 +83,7 @@ class MqttClient:
         self.isConnected = False
 
     def onConnect(self, Connection, Status, Description):
+        Domoticz.Debug("MqttClient::onConnect")
         if (Status == 0):
             Domoticz.Debug("MqttClient::MQTT connected successfully.")
             self.Connect()
@@ -97,6 +98,7 @@ class MqttClient:
             self.mqttDisconnectedCb()
 
     def onHeartbeat(self):
+        Domoticz.Debug("MqttClient::onHeartbeat")
         if self.mqttConn is None or (not self.mqttConn.Connecting() and not self.mqttConn.Connected() or not self.isConnected):
             Domoticz.Debug("MqttClient::Reconnecting")
             self.Open()
@@ -104,7 +106,7 @@ class MqttClient:
             self.Ping()
 
     def onMessage(self, Connection, Data):
-        Domoticz.Debug("MqttClient::onMessage called")
+        Domoticz.Debug("MqttClient::onMessage")
         topic = ''
         if 'Topic' in Data:
             topic = Data['Topic']
