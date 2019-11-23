@@ -36,3 +36,4 @@ based on info from the following sources:
 
 - https://www.hackster.io/uladzislau-bayouski/merge-the-dyson-link-b763c3
 - http://aakira.hatenablog.com/entry/2016/08/12/012654
+- https://github.com/CharlesBlonde/libpurecoollink
