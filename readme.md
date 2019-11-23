@@ -26,19 +26,9 @@ git pull https://github.com/JanJaapKo/DysonPureLink
 2. Restart domoticz
 3. Go to "Hardware" page and add new item with type "DysonPureLink"
 4. Set your MQTT server address and port to plugin settings
-## Configuration
-Set the following parameters: <br>
-IP Adress: adres where your machine is connected to <br>
-Port number: 1883 <br>
-Dyson account password: the password used in the app <br>
-Dyson account email adress: the adress used to create the account <br>
-log level: use verbose preferably <br>
 
-You can ommit the parameters: <br>
-Dyson Password (see machine): <br>
-Dyson Serial No.: <br>
-Dyson type (Pure Cool only at this moment): <br>
-See the Wiki page for more information
+## Configuration
+See the Wiki page for configuration information.
 
 ## Credits
 
