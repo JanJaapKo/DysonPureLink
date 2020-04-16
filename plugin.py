@@ -3,7 +3,7 @@
 # Author: Jan-Jaap Kostelijk
 #
 """
-<plugin key="DysonPureLink" name="Dyson Pure Link" author="Jan-Jaap Kostelijk" version="2.0.1" wikilink="https://github.com/JanJaapKo/DysonPureLink.wiki.git" externallink="https://github.com/JanJaapKo/DysonPureLink">
+<plugin key="DysonPureLink" name="Dyson Pure Link" author="Jan-Jaap Kostelijk" version="2.0.2" wikilink="https://github.com/JanJaapKo/DysonPureLink.wiki.git" externallink="https://github.com/JanJaapKo/DysonPureLink">
     <description>
         <h2>Dyson Pure Link plugin</h2><br/>
         Connects to Dyson Pure Link devices<br/>
@@ -34,6 +34,7 @@
 		<param field="Port" label="Port" width="30px" required="true" default="1883"/>
 		<param field="Mode1" label="Dyson type number" width="75px">
             <options>
+                <option label="438" value="438"/>
                 <option label="455" value="455"/>
                 <option label="465" value="465"/>
                 <option label="469" value="469"/>
@@ -93,6 +94,11 @@ class DysonPureLinkPlugin:
     particlesUnit = 10
     sleepTimeUnit = 11
     fanStateUnit = 12
+    fanFocusUnit = 13
+    fanModeAutoUnit = 14
+    particles2_5Unit = 15
+    particles10Unit = 16
+    nitrogenDioxideDensityUnit = 17
     runCounter = 6
 
     def __init__(self):
@@ -147,16 +153,30 @@ class DysonPureLinkPlugin:
             Domoticz.Device(Name='Standby monitor', Unit=self.standbyMonitoringUnit, Type=244, Subtype=62,Image=7, Switchtype=0).Create()
         if self.filterLifeUnit not in Devices:
             Domoticz.Device(Name='Remaining filter life', Unit=self.filterLifeUnit, TypeName="Custom").Create()
-        if self.qualityTargetUnit not in Devices:
-            Domoticz.Device(Name='Air quality setpoint', Unit=self.qualityTargetUnit, TypeName="Custom").Create()
         if self.tempHumUnit not in Devices:
             Domoticz.Device(Name='Temperature and Humidity', Unit=self.tempHumUnit, TypeName="Temp+Hum").Create()
         if self.volatileUnit not in Devices:
             Domoticz.Device(Name='Volatile organic', Unit=self.volatileUnit, TypeName="Air Quality").Create()
-        if self.particlesUnit not in Devices:
-            Domoticz.Device(Name='Dust', Unit=self.particlesUnit, TypeName="Air Quality").Create()
         if self.sleepTimeUnit not in Devices:
             Domoticz.Device(Name='Sleep timer', Unit=self.sleepTimeUnit, TypeName="Custom").Create()
+
+        if self.particlesUnit not in Devices:
+            Domoticz.Device(Name='Dust', Unit=self.particlesUnit, TypeName="Air Quality").Create()
+        if self.qualityTargetUnit not in Devices:
+            Domoticz.Device(Name='Air quality setpoint', Unit=self.qualityTargetUnit, TypeName="Custom").Create()
+
+        if self.particles2_5Unit not in Devices:
+            Domoticz.Device(Name='Dust (PM 2,5)', Unit=self.particles2_5Unit, TypeName="Air Quality").Create()
+        if self.particles10Unit not in Devices:
+            Domoticz.Device(Name='Dust (PM 10)', Unit=self.particles10Unit, TypeName="Air Quality").Create()
+        Options = {"LevelActions" : "|||", "LevelNames" : "|OFF|ON", "LevelOffHidden" : "true", "SelectorStyle" : "1"}
+        if self.fanModeAutoUnit not in Devices:
+            Domoticz.Device(Name='Fan mode auto', Unit=self.fanModeAutoUnit, TypeName="Selector Switch", Image=7, Options=Options).Create()
+        Options = {"LevelActions" : "|||", "LevelNames" : "|OFF|ON", "LevelOffHidden" : "true", "SelectorStyle" : "1"}
+        if self.fanFocusUnit not in Devices:
+            Domoticz.Device(Name='Fan focus mode', Unit=self.fanFocusUnit, TypeName="Selector Switch", Image=7, Options=Options).Create()
+        if self.nitrogenDioxideDensityUnit not in Devices:
+            Domoticz.Device(Name='Nitrogen Dioxide Density (NOx)', Unit=self.nitrogenDioxideDensityUnit, TypeName="Air Quality").Create()
 
         #read out parameters for local connection
         self.ip_address = Parameters["Address"].strip()
@@ -180,7 +200,7 @@ class DysonPureLinkPlugin:
         else:
             Domoticz.Debug("number of devices: '"+str(len(deviceList))+"'")
 
-        if deviceList != None:
+        if deviceList != None and len(deviceList)>0:
             self.myDevice=deviceList[0]
 
             Domoticz.Debug("local device pwd:      '"+self.password+"'")
@@ -199,9 +219,6 @@ class DysonPureLinkPlugin:
 
         #create the connection
         self.mqttClient = MqttClient(self.ip_address, self.port_number, mqtt_client_id, self.onMQTTConnected, self.onMQTTDisconnected, self.onMQTTPublish, self.onMQTTSubscribed)
-        
-        #create a Dyson device object
-        #self.dyson_pure_link = DysonPureLinkDevice(self.password, self.serial_number, self.device_type, self.ip_address, self.port_number)
     
     def onStop(self):
         Domoticz.Debug("onStop called")
@@ -273,16 +290,27 @@ class DysonPureLinkPlugin:
         UpdateDevice(self.fanModeUnit, self.state_data.fan_mode.state, str((self.state_data.fan_mode.state+1)*10))
         UpdateDevice(self.fanStateUnit, self.state_data.fan_state.state, str((self.state_data.fan_state.state+1)*10))
         UpdateDevice(self.filterLifeUnit, self.state_data.filter_life, str(self.state_data.filter_life))
+        if self.state_data.fan_mode_auto is not None:
+            UpdateDevice(self.fanModeAutoUnit, self.state_data.fan_mode_auto.state, str((self.state_data.fan_mode_auto.state+1)*10))
+        if self.state_data.focus is not None:
+            UpdateDevice(self.fanFocusUnit, self.state_data.focus.state, str(self.state_data.focus))
 
     def updateSensors(self):
         """Update the defined devices from incoming mesage info"""
         #update the devices
-        if self.sensor_data.temperature != None :
+        if self.sensor_data.temperature is not None :
             tempNum = int(self.sensor_data.temperature)
             humNum = int(self.sensor_data.humidity)
             UpdateDevice(self.tempHumUnit, 1, str(self.sensor_data.temperature)[:4] +';'+ str(self.sensor_data.humidity) + ";1")
         UpdateDevice(self.volatileUnit, self.sensor_data.volatile_compounds, str(self.sensor_data.volatile_compounds))
-        UpdateDevice(self.particlesUnit, self.sensor_data.particles, str(self.sensor_data.particles))
+        if self.sensor_data.particles is not None:
+            UpdateDevice(self.particlesUnit, self.sensor_data.particles, str(self.sensor_data.particles))
+        if self.sensor_data.particles2_5 is not None:
+            UpdateDevice(self.particles2_5Unit, self.sensor_data.particles2_5, str(self.sensor_data.particles2_5))
+        if self.sensor_data.particles10 is not None:
+            UpdateDevice(self.particles10Unit, self.sensor_data.particles10, str(self.sensor_data.particles10))
+        if self.sensor_data.nitrogenDioxideDensity is not None:
+            UpdateDevice(self.nitrogenDioxideDensityUnit, self.sensor_data.nitrogenDioxideDensity, str(self.sensor_data.nitrogenDioxideDensity))
         UpdateDevice(self.sleepTimeUnit, self.sensor_data.sleep_timer, str(self.sensor_data.sleep_timer))
         Domoticz.Debug("update SensorData: " + str(self.sensor_data))
         Domoticz.Debug("update StateData: " + str(self.state_data))
@@ -290,9 +318,8 @@ class DysonPureLinkPlugin:
     def onMQTTConnected(self):
         """connection to device established"""
         Domoticz.Debug("onMQTTConnected called")
-        self.mqttClient.Subscribe([self.base_topic + '/#']) #subscribe to topics on the machine
+        self.mqttClient.Subscribe([self.base_topic + '/#']) #subscribe to all topics on the machine
         topic, payload = self.myDevice.request_state()
-        #topic = '{0}/{1}/command'.format(self.myDevice.product_type, self.myDevice.serial)
         self.mqttClient.Publish(topic, payload) #ask for update of current status
 
     def onMQTTDisconnected(self):
