@@ -3,7 +3,7 @@ Domoticz plugin to integrate the Dyson PureLink devices
 
 ## Prerequisites
 
-Requires Domoticz version V4.10548 or later (due to password hashing). Follow the Domoticz guide on [Using Python Plugins] (https://www.domoticz.com/wiki/Using_Python_plugins) to enable the plugin framework.
+Requires Domoticz version V4.10548 or later (due to password hashing). Follow the Domoticz guide on [Using Python Plugins](https://www.domoticz.com/wiki/Using_Python_plugins) to enable the plugin framework.
 
 The following Python modules installed
 ```
