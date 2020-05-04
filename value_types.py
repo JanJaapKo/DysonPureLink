@@ -62,7 +62,14 @@ class DisconnectionError(Exception):
 
 class SensorsData(object):
     """Value type for sensors data"""
-
+    humidity = None
+    temperature = None
+    volatile_compounds = None
+    particles = None
+    particles2_5 = None
+    particles10 = None
+    nitrogenDioxideDensity = None
+    
     def __init__(self, message):
         data = message['data']
         humidity = data['hact']
@@ -70,11 +77,19 @@ class SensorsData(object):
         volatile_compounds = data['vact']
         sleep_timer = data['sltm']
 
-        self.particles = int(data['pact'])
+        if 'pact' in data:
+            self.particles = int(data['pact'])
         self.humidity = None if humidity == 'OFF' else int(humidity)
         self.temperature = None if temperature == 'OFF' else self.kelvin_to_celsius(float(temperature) / 10)
         self.volatile_compounds = 0 if volatile_compounds == 'INIT' else int(volatile_compounds)
         self.sleep_timer = 0 if sleep_timer == 'OFF' else int(sleep_timer)
+
+        if 'p25r' in data:
+            self.particles2_5 = int(data['p25r'])
+        if 'p10r' in data:
+            self.particles10 = int(data['p10r']) 
+        if 'noxl' in data:
+            self.nitrogenDioxideDensity = int(data['noxl'])
 
     def __repr__(self):
         """Return a String representation"""
@@ -100,23 +115,38 @@ class SensorsData(object):
 class StateData(object):
     """Value type for state data"""
     fan_mode = None
-    fan_modeC = None
+    fan_mode_auto = None
     fan_state = None
     night_mode = None
     oscillation = None
     standby_monitoring = None
     fan_speed = None
+    focus = None
+    filter_life = None
+    error_code = None
+    warning_code = None
 
     def __init__(self, message):
         data = message['product-state']
         
-        self.fan_mode = FanMode(self._get_field_value(data['fmod'])) #  ON, OFF, AUTO, (FAN?)
+        if 'fmod' in data:
+            self.fan_mode = FanMode(self._get_field_value(data['fmod'])) #  ON, OFF, AUTO, (FAN?)
+        if 'fpwr' in data:
+            self.fan_mode = FanMode(self._get_field_value(data['fpwr'])) # ON, OFF 
+        if 'auto' in data:
+            self.fan_mode_auto = FanMode(self._get_field_value(data['auto'])) # ON, OFF
         self.fan_state = FanMode(self._get_field_value(data['fnst'])) # ON , OFF, (FAN?)
         self.night_mode = FanMode(self._get_field_value(data['nmod'])) # ON , OFF
         self.fan_speed = self._get_field_value(data['fnsp']) # 0001 - 0010, AUTO
         self.oscillation = FanMode(self._get_field_value(data['oson'])) #ON , OFF
-        self.filter_life = int(self._get_field_value(data['filf'])) #0000 - 4300
-        self.quality_target = self._get_field_value(data['qtar']) #0001 , 0003...
+        if 'fdir' in data:
+            self.focus = FanMode(self._get_field_value(data['fdir'])) #ON , OFF
+        if 'hflr' in data:
+            self.filter_life = int((int(self._get_field_value(data['hflr'])) + int(self._get_field_value(data['cflr']))) / 2) # // With TP04 models average cflr and hflr
+        if 'filf' in data:
+            self.filter_life = int(self._get_field_value(data['filf'])) #0000 - 4300
+        if 'qtar' in data:
+            self.quality_target = self._get_field_value(data['qtar']) #0001 , 0003...
         self.standby_monitoring = FanMode(self._get_field_value(data['rhtm'])) # ON, OFF
         self.error_code = self._get_field_value(data['ercd']) #I think this is an errorcode: NONE when filter needs replacement
         self.warning_code = self._get_field_value(data['wacd']) #I think this is Warning: FLTR when filter needs replacement
