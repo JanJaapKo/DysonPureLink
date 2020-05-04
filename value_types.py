@@ -146,14 +146,14 @@ class StateData(object):
         if 'filf' in data:
             self.filter_life = int(self._get_field_value(data['filf'])) #0000 - 4300
         if 'qtar' in data:
-            self.quality_target = self._get_field_value(data['qtar']) #0001 , 0003...
+            self.quality_target = int(self._get_field_value(data['qtar'])) #0001 , 0003...
         self.standby_monitoring = FanMode(self._get_field_value(data['rhtm'])) # ON, OFF
         self.error_code = self._get_field_value(data['ercd']) #I think this is an errorcode: NONE when filter needs replacement
         self.warning_code = self._get_field_value(data['wacd']) #I think this is Warning: FLTR when filter needs replacement
 
     def __repr__(self):
         """Return a String representation"""
-        return 'StateData: Fan mode: {0} + state: {1}, speed: {2}, AirQual: {3} night mode: {4}, Oscillation: {5}, Filter life: {6}, Standby monitoring: {7}, ErrCode: {8}'.format(
+        return 'StateData: Fan mode: {0} + state: {1}, speed: {2}, AirQual target: {3} night mode: {4}, Oscillation: {5}, Filter life: {6}, Standby monitoring: {7}, ErrCode: {8}'.format(
             self.fan_mode, self.fan_state, self.fan_speed, self.quality_target, self.night_mode, self.oscillation, self.filter_life, self.standby_monitoring, self.error_code)
 
     @property

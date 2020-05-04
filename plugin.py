@@ -290,6 +290,8 @@ class DysonPureLinkPlugin:
         UpdateDevice(self.fanModeUnit, self.state_data.fan_mode.state, str((self.state_data.fan_mode.state+1)*10))
         UpdateDevice(self.fanStateUnit, self.state_data.fan_state.state, str((self.state_data.fan_state.state+1)*10))
         UpdateDevice(self.filterLifeUnit, self.state_data.filter_life, str(self.state_data.filter_life))
+        UpdateDevice(self.qualityTargetUnit, self.state_data.quality_target, str(self.state_data.quality_target))
+        UpdateDevice(self.standbyMonitoringUnit, self.state_data.standby_monitoring.state, str((self.state_data.standby_monitoring.state+1)*10))
         if self.state_data.fan_mode_auto is not None:
             UpdateDevice(self.fanModeAutoUnit, self.state_data.fan_mode_auto.state, str((self.state_data.fan_mode_auto.state+1)*10))
         if self.state_data.focus is not None:
