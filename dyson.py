@@ -6,7 +6,7 @@ import urllib.request
 import urllib.parse
 from dyson_device import DysonDevice
 
-DYSON_API_URL = "api.cp.dyson.com"
+DYSON_API_URL = "appapi.cp.dyson.com"
 
 class DysonAccount:
     """Dyson account."""
@@ -31,6 +31,7 @@ class DysonAccount:
             "Password": self._password
         }
         uri = "https://{0}/v1/userregistration/authenticate?country={1}".format(DYSON_API_URL, self._country)
+        Domoticz.Debug("Request URL: '" + uri + "'")
         login = requests.post(
             uri, request_body, verify=False)
         if login.status_code == requests.codes.ok:
@@ -42,6 +43,7 @@ class DysonAccount:
             self._logged = True
         else:
             self._logged = False
+            Domoticz.Debug("Login NOK, response: '"+str(login.status_code)+"'")
         return self._logged
 
     def devices(self):
