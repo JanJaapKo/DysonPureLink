@@ -2,11 +2,12 @@
 
 import Domoticz
 import requests
-import urllib.request
-import urllib.parse
+# import urllib.request
+# import urllib.parse
 from dyson_device import DysonDevice
 
 DYSON_API_URL = "appapi.cp.dyson.com"
+#DYSON_API_URL = "api.cp.dyson.com"
 
 class DysonAccount:
     """Dyson account."""
@@ -43,7 +44,8 @@ class DysonAccount:
             self._logged = True
         else:
             self._logged = False
-            Domoticz.Debug("Login NOK, response: '"+str(login.status_code)+"'")
+            #Domoticz.Debug("Login NOK, response: '"+str(login.status_code)+"'")
+            Domoticz.Error("Login to Dyson account Not OK: '" +str(login.status_code)+", " +str(login.reason)+"'")
         return self._logged
 
     def devices(self):

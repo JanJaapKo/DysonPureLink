@@ -140,6 +140,16 @@ class DysonDevice:
                 'time': time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime())})
             
         return(self.device_command, command);
+
+    def _create_command(self, data):
+        """create change state message"""
+        command = json.dumps({
+            'msg': 'STATE-SET',
+            'mode-reason': 'LAPP',
+            'data': data,
+            'time': time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime())
+        })
+        return command
         
     def set_fan_mode(self, mode):
         """Changes fan mode: ON|OFF|AUTO|FAN"""

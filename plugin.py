@@ -3,7 +3,7 @@
 # Author: Jan-Jaap Kostelijk
 #
 """
-<plugin key="DysonPureLink" name="Dyson Pure Link" author="Jan-Jaap Kostelijk" version="2.0.2" wikilink="https://github.com/JanJaapKo/DysonPureLink.wiki.git" externallink="https://github.com/JanJaapKo/DysonPureLink">
+<plugin key="DysonPureLink" name="Dyson Pure Link" author="Jan-Jaap Kostelijk" version="2.0.3" wikilink="https://github.com/JanJaapKo/DysonPureLink.wiki.git" externallink="https://github.com/JanJaapKo/DysonPureLink">
     <description>
         <h2>Dyson Pure Link plugin</h2><br/>
         Connects to Dyson Pure Link devices<br/>
@@ -42,9 +42,9 @@
                 <option label="527" value="527"/>
             </options>
         </param>
-		<param field="Username" label="Dyson Serial No." required="true"/>
-		<param field="Password" label="Dyson Password (see machine)" required="true" password="true"/>
-		<param field="Mode5" label="Dyson account email adress" default="sinterklaas@gmail.com" width="300px" required="true"/>
+		<param field="Username" label="Dyson Serial No." required="false"/>
+		<param field="Password" label="Dyson Password (see machine)" required="false" password="true"/>
+		<param field="Mode5" label="Dyson account email adress" default="sinterklaas@gmail.com" width="300px" required="false"/>
         <param field="Mode3" label="Dyson account password" required="false" default="" password="true"/>
 		<param field="Mode4" label="Debug" width="75px">
             <options>
@@ -198,27 +198,29 @@ class DysonPureLinkPlugin:
         if deviceList == None or len(deviceList)<1:
             Domoticz.Log("No devices found in Dyson cloud account")
         else:
-            Domoticz.Debug("number of devices: '"+str(len(deviceList))+"'")
+            Domoticz.Debug("Number of devices from cloud: '"+str(len(deviceList))+"'")
 
         if deviceList != None and len(deviceList)>0:
             self.myDevice=deviceList[0]
-
             Domoticz.Debug("local device pwd:      '"+self.password+"'")
             Domoticz.Debug("cloud device pwd:      '"+self.myDevice.credentials+"'")
             Parameters['Username'] = self.myDevice.serial #take username from account
             Parameters['Password'] = self.myDevice.credentials #override the default password with the one returned from the cloud
             self.base_topic = "{0}/{1}".format(self.myDevice.product_type, self.myDevice.serial)
             Domoticz.Debug("base topic defined: '"+self.base_topic+"'")
-        else:
-            Domoticz.Log("no cloud devices found, try the local credentials will be used")
+        elif len(self.serial_number)>0:
+            Domoticz.Log("No cloud devices found, the local credentials will be used")
             #create a Dyson device object
             Domoticz.Debug("local device pwd:      '"+self.password+"'")
             Domoticz.Debug("local device usn:      '"+self.serial_number+"'")
             Parameters['Password'] = self.password
             self.myDevice = DysonPureLinkDevice(self.password, self.serial_number, self.device_type, self.ip_address, self.port_number)
+        else:
+            Domoticz.Error("No usable credentials found")
 
         #create the connection
-        self.mqttClient = MqttClient(self.ip_address, self.port_number, mqtt_client_id, self.onMQTTConnected, self.onMQTTDisconnected, self.onMQTTPublish, self.onMQTTSubscribed)
+        if self.myDevice != None:
+            self.mqttClient = MqttClient(self.ip_address, self.port_number, mqtt_client_id, self.onMQTTConnected, self.onMQTTDisconnected, self.onMQTTPublish, self.onMQTTSubscribed)
     
     def onStop(self):
         Domoticz.Debug("onStop called")
@@ -320,6 +322,7 @@ class DysonPureLinkPlugin:
     def onMQTTConnected(self):
         """connection to device established"""
         Domoticz.Debug("onMQTTConnected called")
+        Domoticz.Log("MQTT connection established")
         self.mqttClient.Subscribe([self.base_topic + '/#']) #subscribe to all topics on the machine
         topic, payload = self.myDevice.request_state()
         self.mqttClient.Publish(topic, payload) #ask for update of current status
