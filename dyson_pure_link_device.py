@@ -1,6 +1,5 @@
 """Dyson Pure Link Device Logic"""
 
-import Domoticz
 import commands
 
 from value_types import CONNECTION_STATE, DISCONNECTION_STATE, FanMode, StandbyMonitoring, ConnectionError, DisconnectionError, SensorsData, StateData

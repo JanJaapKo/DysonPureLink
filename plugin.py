@@ -224,7 +224,7 @@ class DysonPureLinkPlugin:
         Domoticz.Debug("onStop called")
 
     def onCommand(self, Unit, Command, Level, Hue):
-        Domoticz.Log("DysonPureLink plugin: onCommand called for Unit " + str(Unit) + ": Parameter '" + str(Command) + "', Level: " + str(Level))
+        Domoticz.Debug("DysonPureLink plugin: onCommand called for Unit " + str(Unit) + ": Parameter '" + str(Command) + "', Level: " + str(Level))
         topic = ''
         payload = ''
         
@@ -255,8 +255,7 @@ class DysonPureLinkPlugin:
         self.mqttClient.Publish(topic, payload)
 
     def onConnect(self, Connection, Status, Description):
-        Domoticz.Debug("onConnect called")
-        Domoticz.Debug("onConnect returns 1: Connection '"+str(Connection)+"', Status: '"+str(Status)+"', Description: '"+Description+"'")
+        Domoticz.Debug("onConnect called: Connection '"+str(Connection)+"', Status: '"+str(Status)+"', Description: '"+Description+"'")
         self.mqttClient.onConnect(Connection, Status, Description)
 
     def onDisconnect(self, Connection):

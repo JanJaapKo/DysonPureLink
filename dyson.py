@@ -38,14 +38,11 @@ class DysonAccount:
         if login.status_code == requests.codes.ok:
             json_response = login.json()
             Domoticz.Debug("Login OK, JSON response: '"+str(json_response)+"'")
-            #pwdMngr = urllib.request.HTTPPasswordMgrWithDefaultRealm()
-            #pwdMngr.add_password(None, uri, json_response["Account"], json_response["Password"])
             self._auth = (json_response["Account"], json_response["Password"])
             self._logged = True
         else:
             self._logged = False
-            #Domoticz.Debug("Login NOK, response: '"+str(login.status_code)+"'")
-            Domoticz.Error("Login to Dyson account Not OK: '" +str(login.status_code)+", " +str(login.reason)+"'")
+            Domoticz.Error("Login to Dyson account failed: '" +str(login.status_code)+", " +str(login.reason)+"'")
         return self._logged
 
     def devices(self):
