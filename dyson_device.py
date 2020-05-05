@@ -2,6 +2,7 @@
 
 import json
 import time
+import commands
 
 from utils import printable_fields
 from utils import decrypt_password
@@ -44,8 +45,8 @@ class NetworkDevice:
         return 'NetworkDevice(' + ",".join(printable_fields(fields)) + ')'
 
 
-class DysonDevice:
-    """Abstract Dyson device."""
+class DysonDevice(commands.DysonCommands):
+    """Abstract Dyson device built from informantion from Cload Account."""
 
     def __init__(self, json_body):
         """Create a new Dyson device.
@@ -53,12 +54,12 @@ class DysonDevice:
         :param json_body: JSON message returned by the HTTPS API
         """
         self._active = json_body['Active']
-        self._serial = json_body['Serial'] #device serial number
         self._name = json_body['Name'] #device name
         self._version = json_body['Version'] #sw version on device
         self._credentials = decrypt_password(json_body['LocalCredentials']) #registered password
         self._auto_update = json_body['AutoUpdate'] #
         self._new_version_available = json_body['NewVersionAvailable'] #is there a new version available?
+        self._serial = json_body['Serial'] #device serial number
         self._product_type = json_body['ProductType'] #technical product type
         self._network_device = None
         self._connected = False
@@ -71,11 +72,6 @@ class DysonDevice:
         return self._active
 
     @property
-    def serial(self):
-        """Device serial."""
-        return self._serial
-
-    @property
     def name(self):
         """Device name."""
         return self._name
@@ -86,7 +82,7 @@ class DysonDevice:
         return self._version
 
     @property
-    def credentials(self):
+    def password(self):
         """Device encrypted credentials."""
         return self._credentials
 
@@ -99,11 +95,6 @@ class DysonDevice:
     def new_version_available(self):
         """Return if new version available."""
         return self._new_version_available
-
-    @property
-    def product_type(self):
-        """Product type."""
-        return self._product_type
 
     @property
     def network_device(self):
@@ -125,58 +116,5 @@ class DysonDevice:
                   ("network_device", str(self.network_device))]
         return fields
 
-    @property
-    def device_command(self):
-        return '{0}/{1}/command'.format(self.product_type, self.serial)
-
-    @property
-    def device_status(self):
-        return '{0}/{1}/status/current'.format(self.product_type, self.serial)
-        
-    def request_state(self):
-        """creates request for current state message"""
-        command = json.dumps({
-                'msg': 'REQUEST-CURRENT-STATE',
-                'time': time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime())})
-            
-        return(self.device_command, command);
-
-    def _create_command(self, data):
-        """create change state message"""
-        command = json.dumps({
-            'msg': 'STATE-SET',
-            'mode-reason': 'LAPP',
-            'data': data,
-            'time': time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime())
-        })
-        return command
-        
-    def set_fan_mode(self, mode):
-        """Changes fan mode: ON|OFF|AUTO|FAN"""
-        command = self._create_command({'fmod': mode})
-        return(self.device_command, command);
-
-    def set_fan_state(self, state):
-        """Changes fan mode: ON|OFF|AUTO"""
-        command = self._create_command({'fnst': state})
-        return(self.device_command, command);
-
-    def set_fan_speed(self, speed):
-        """Changes fan speed: 0001..0010|AUTO"""
-        command = self._create_command({'fnsp': speed})
-        return(self.device_command, command);
-
-    def set_standby_monitoring(self, mode):
-        """Changes standby monitoring: ON|OFF"""
-        command = self._create_command({'rhtm': mode})
-        return(self.device_command, command);
-
-    def set_night_mode(self, mode):
-        """Changes night mode: ON|OFF"""
-        command = self._create_command({'nmod': mode})
-        return(self.device_command, command);
-
-    def set_oscilation(self, mode):
-        """Changes oscilation mode: ON|OFF"""
-        command = self._create_command({'oson': mode})
-        return(self.device_command, command);
+    def __repr__(self):
+        return "Dyson device from Cloud: '{0}' with serial '{1}' of type '{2}', with version '{3}'".format(self.name, self.serial, self.product_type, self.version)
