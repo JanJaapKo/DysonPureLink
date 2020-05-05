@@ -172,7 +172,7 @@ class DysonPureLinkPlugin:
             Domoticz.Device(Name='Fan mode auto', Unit=self.fanModeAutoUnit, TypeName="Selector Switch", Image=7, Options=Options).Create()
         Options = {"LevelActions" : "|||", "LevelNames" : "|OFF|ON", "LevelOffHidden" : "true", "SelectorStyle" : "1"}
         if self.fanFocusUnit not in Devices:
-            Domoticz.Device(Name='Fan focus mode', Unit=self.fanFocusUnit, TypeName="Selector Switch", Image=7, Options=Options).Create()
+            Domoticz.Device(Name='Fan focus mode', Unit=self.fanFocusUnit, Type=244, Subtype=62,Image=7, Switchtype=0).Create()
         if self.nitrogenDioxideDensityUnit not in Devices:
             Domoticz.Device(Name='Nitrogen Dioxide Density (NOx)', Unit=self.nitrogenDioxideDensityUnit, TypeName="Air Quality").Create()
 
