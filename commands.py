@@ -75,3 +75,18 @@ class DysonCommands(object):
         """Changes oscilation mode: ON|OFF"""
         command = self._create_command({'oson': mode})
         return(self.device_command, command);
+
+    def set_focus(self, mode):
+        """Changes focus mode: ON|OFF"""
+        command = self._create_command({'fdir': mode})
+        return(self.device_command, command);
+
+    def set_fan_mode_auto(self, mode):
+        """Changes auto mode: ON|OFF"""
+        command = self._create_command({'auto': mode})
+        return(self.device_command, command);
+
+    def set_quality_target(self, mode):
+        """Changes auto mode: 0001..0004"""
+        command = self._create_command({'qtar': mode})
+        return(self.device_command, command);

@@ -3,7 +3,7 @@
 # Author: Jan-Jaap Kostelijk
 #
 """
-<plugin key="DysonPureLink" name="Dyson Pure Link" author="Jan-Jaap Kostelijk" version="2.1.0" wikilink="https://github.com/JanJaapKo/DysonPureLink.wiki.git" externallink="https://github.com/JanJaapKo/DysonPureLink">
+<plugin key="DysonPureLink" name="Dyson Pure Link" author="Jan-Jaap Kostelijk" version="2.1.1" wikilink="https://github.com/JanJaapKo/DysonPureLink.wiki.git" externallink="https://github.com/JanJaapKo/DysonPureLink">
     <description>
         <h2>Dyson Pure Link plugin</h2><br/>
         Connects to Dyson Pure Link devices<br/>
@@ -227,6 +227,10 @@ class DysonPureLinkPlugin:
         Domoticz.Log("DysonPureLink plugin: onCommand called for Unit " + str(Unit) + ": Parameter '" + str(Command) + "', Level: " + str(Level))
         topic = ''
         payload = ''
+        
+        if Unit == self.qualityTargetUnit and Level<=100:
+            arg="0000"+str(Level//10)
+            topic, payload = self.myDevice.set_quality_target(arg[-4:]) #use last 4 characters as quality target
         if Unit == self.fanSpeedUnit and Level<=100:
             arg="0000"+str(Level//10)
             topic, payload = self.myDevice.set_fan_speed(arg[-4:]) #use last 4 characters as speed level or AUTO
@@ -235,12 +239,18 @@ class DysonPureLinkPlugin:
             if Level == 20: arg="FAN"
             if Level >=30: arg="AUTO"
             topic, payload = self.myDevice.set_fan_mode(arg) 
-        if Unit == self.fanStateUnit :
+        if Unit == self.fanStateUnit:
             if Level == 10: arg="OFF"
             if Level == 20: arg="ON"
             topic, payload = self.myDevice.set_fan_state(arg) 
-        if Unit == self.fanOscillationUnit :
+        if Unit == self.fanOscillationUnit:
             topic, payload = self.myDevice.set_oscilation(str(Command).upper()) 
+        if Unit == self.fanFocusUnit:
+            topic, payload = self.myDevice.set_focus(str(Command).upper()) 
+        if Unit == self.fanModeAutoUnit:
+            topic, payload = self.myDevice.set_fan_mode_auto(str(Command).upper()) 
+        if Unit == self.standbyMonitoringUnit:
+            topic, payload = self.myDevice.set_standby_monitoring(str(Command).upper()) 
             
         self.mqttClient.Publish(topic, payload)
 
