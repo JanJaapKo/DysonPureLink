@@ -87,6 +87,10 @@ class DysonCommands(object):
         return(self.device_command, command);
 
     def set_quality_target(self, mode):
-        """Changes auto mode: 0001..0004"""
-        command = self._create_command({'qtar': mode})
+        """Changes quality target: 0001..0004"""
+        if mode == 10 : level = 4
+        if mode == 20 : level = 3
+        if mode == 30 : level = 1
+        arg="000"+str(level)
+        command = self._create_command({'qtar': arg})
         return(self.device_command, command);

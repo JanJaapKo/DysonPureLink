@@ -3,7 +3,7 @@
 # Author: Jan-Jaap Kostelijk
 #
 """
-<plugin key="DysonPureLink" name="Dyson Pure Link" author="Jan-Jaap Kostelijk" version="2.1.1" wikilink="https://github.com/JanJaapKo/DysonPureLink.wiki.git" externallink="https://github.com/JanJaapKo/DysonPureLink">
+<plugin key="DysonPureLink" name="Dyson Pure Link" author="Jan-Jaap Kostelijk" version="2.1.2" wikilink="https://github.com/JanJaapKo/DysonPureLink.wiki.git" externallink="https://github.com/JanJaapKo/DysonPureLink">
     <description>
         <h2>Dyson Pure Link plugin</h2><br/>
         Connects to Dyson Pure Link devices<br/>
@@ -161,7 +161,11 @@ class DysonPureLinkPlugin:
         if self.particlesUnit not in Devices:
             Domoticz.Device(Name='Dust', Unit=self.particlesUnit, TypeName="Air Quality").Create()
         if self.qualityTargetUnit not in Devices:
-            Domoticz.Device(Name='Air quality setpoint', Unit=self.qualityTargetUnit, TypeName="Custom").Create()
+            Options = {"LevelActions" : "||",
+                       "LevelNames" : "|Normal|Sensitive (Medium)|Very Sensitive (High)",
+                       "LevelOffHidden" : "true",
+                       "SelectorStyle" : "1"}
+            Domoticz.Device(Name='Air quality setpoint', Unit=self.qualityTargetUnit, TypeName="Selector Switch", Image=7, Options=Options).Create()
 
         if self.particles2_5Unit not in Devices:
             Domoticz.Device(Name='Dust (PM 2,5)', Unit=self.particles2_5Unit, TypeName="Air Quality").Create()
@@ -229,8 +233,7 @@ class DysonPureLinkPlugin:
         payload = ''
         
         if Unit == self.qualityTargetUnit and Level<=100:
-            arg="0000"+str(Level//10)
-            topic, payload = self.myDevice.set_quality_target(arg[-4:]) #use last 4 characters as quality target
+            topic, payload = self.myDevice.set_quality_target(Level)
         if Unit == self.fanSpeedUnit and Level<=100:
             arg="0000"+str(Level//10)
             topic, payload = self.myDevice.set_fan_speed(arg[-4:]) #use last 4 characters as speed level or AUTO
@@ -279,8 +282,8 @@ class DysonPureLinkPlugin:
         else:
             Domoticz.Debug("Polling unit in " + str(self.runCounter) + " heartbeats.")
 
-    def onDeviceRemoved(self):
-        Domoticz.Log("DysonPureLink plugin: onDeviceRemoved called")
+    def onDeviceRemoved(self, unit):
+        Domoticz.Log("DysonPureLink plugin: onDeviceRemoved called for unit '" + str(unit) + "'")
     
     def updateDevices(self):
         """Update the defined devices from incoming mesage info"""
@@ -299,7 +302,7 @@ class DysonPureLinkPlugin:
         UpdateDevice(self.fanModeUnit, self.state_data.fan_mode.state, str((self.state_data.fan_mode.state+1)*10))
         UpdateDevice(self.fanStateUnit, self.state_data.fan_state.state, str((self.state_data.fan_state.state+1)*10))
         UpdateDevice(self.filterLifeUnit, self.state_data.filter_life, str(self.state_data.filter_life))
-        UpdateDevice(self.qualityTargetUnit, self.state_data.quality_target, str(self.state_data.quality_target))
+        UpdateDevice(self.qualityTargetUnit, self.state_data.quality_target.state, str((self.state_data.quality_target.state+1)*10))
         UpdateDevice(self.standbyMonitoringUnit, self.state_data.standby_monitoring.state, str((self.state_data.standby_monitoring.state+1)*10))
         if self.state_data.fan_mode_auto is not None:
             UpdateDevice(self.fanModeAutoUnit, self.state_data.fan_mode_auto.state, str((self.state_data.fan_mode_auto.state+1)*10))

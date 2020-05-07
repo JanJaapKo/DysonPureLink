@@ -39,6 +39,31 @@ class FanMode():
         if self._state == self.OFF: return 0
         if self._state == self.ON: return 1
         if self._state == self.AUTO: return 2
+
+class QualityTarget():
+    """Enum for air quality target"""
+    HIGH = 'HIGH'
+    MEDIUM = 'MEDIUM'
+    NORMAL = 'NORMAL'
+    UNKNOWN = 'UNKNOWN'
+    _state = None
+    
+    def __init__(self, state):
+        """go from string to state object"""
+        if state.upper() == '0001': self._state = self.HIGH
+        if state.upper() == '0002': self._state = self.UNKNOWN
+        if state.upper() == '0003': self._state = self.MEDIUM
+        if state.upper() == '0004': self._state = self.NORMAL
+    
+    def __repr__(self):
+        return self._state
+        
+    @property
+    def state(self):
+        if self._state == self.NORMAL: return 0
+        if self._state == self.MEDIUM: return 1
+        if self._state == self.HIGH: return 2
+        if self._state == self.UNKNOWN: return 3
     
 class StandbyMonitoring(object):
     """Enum for monitor air quality when on standby"""
@@ -146,7 +171,7 @@ class StateData(object):
         if 'filf' in data:
             self.filter_life = int(self._get_field_value(data['filf'])) #0000 - 4300
         if 'qtar' in data:
-            self.quality_target = int(self._get_field_value(data['qtar'])) #0001 , 0003...
+            self.quality_target = QualityTarget(self._get_field_value(data['qtar'])) #0001 (high), 0003 (medium) , 0004 (normal)
         self.standby_monitoring = FanMode(self._get_field_value(data['rhtm'])) # ON, OFF
         self.error_code = self._get_field_value(data['ercd']) #I think this is an errorcode: NONE when filter needs replacement
         self.warning_code = self._get_field_value(data['wacd']) #I think this is Warning: FLTR when filter needs replacement
