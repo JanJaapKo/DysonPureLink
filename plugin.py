@@ -3,7 +3,7 @@
 # Author: Jan-Jaap Kostelijk
 #
 """
-<plugin key="DysonPureLink" name="Dyson Pure Link" author="Jan-Jaap Kostelijk" version="2.1.2" wikilink="https://github.com/JanJaapKo/DysonPureLink.wiki.git" externallink="https://github.com/JanJaapKo/DysonPureLink">
+<plugin key="DysonPureLink" name="Dyson Pure Link" author="Jan-Jaap Kostelijk" version="2.1.3" wikilink="https://github.com/JanJaapKo/DysonPureLink.wiki.git" externallink="https://github.com/JanJaapKo/DysonPureLink">
     <description>
         <h2>Dyson Pure Link plugin</h2><br/>
         Connects to Dyson Pure Link devices<br/>
@@ -254,7 +254,9 @@ class DysonPureLinkPlugin:
             topic, payload = self.myDevice.set_fan_mode_auto(str(Command).upper()) 
         if Unit == self.standbyMonitoringUnit:
             topic, payload = self.myDevice.set_standby_monitoring(str(Command).upper()) 
-            
+        if Unit == self.nightModeUnit:
+            topic, payload = self.myDevice.set_night_mode(str(Command).upper()) 
+
         self.mqttClient.Publish(topic, payload)
 
     def onConnect(self, Connection, Status, Description):
