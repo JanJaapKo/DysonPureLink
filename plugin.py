@@ -3,7 +3,7 @@
 # Author: Jan-Jaap Kostelijk
 #
 """
-<plugin key="DysonPureLink" name="Dyson Pure Link" author="Jan-Jaap Kostelijk" version="2.2.0" wikilink="https://github.com/JanJaapKo/DysonPureLink.wiki.git" externallink="https://github.com/JanJaapKo/DysonPureLink">
+<plugin key="DysonPureLink" name="Dyson Pure Link" author="Jan-Jaap Kostelijk" version="2.2.1" wikilink="https://github.com/JanJaapKo/DysonPureLink.wiki.git" externallink="https://github.com/JanJaapKo/DysonPureLink">
     <description>
         <h2>Dyson Pure Link plugin</h2><br/>
         Connects to Dyson Pure Link devices<br/>
@@ -24,6 +24,7 @@
                 <ol type="a">
                     <li>enter the email adress under "Dyson account email adress"</li>
                     <li>enter the password under "Dyson account password"</li>
+                    <li>enter the machine's name under "machine name" when there are more than 1 machines linked to the account</li>
                 </ol>
             </ol>
         </ul>
@@ -231,7 +232,6 @@ class DysonPureLinkPlugin:
         Domoticz.Log("Device instance created: " + str(self.myDevice))
         self.base_topic = self.myDevice.device_base_topic
         Domoticz.Debug("base topic defined: '"+self.base_topic+"'")
-
 
         #create the connection
         if self.myDevice != None:
