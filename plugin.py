@@ -3,7 +3,7 @@
 # Author: Jan-Jaap Kostelijk
 #
 """
-<plugin key="DysonPureLink" name="Dyson Pure Link" author="Jan-Jaap Kostelijk" version="2.1.3" wikilink="https://github.com/JanJaapKo/DysonPureLink.wiki.git" externallink="https://github.com/JanJaapKo/DysonPureLink">
+<plugin key="DysonPureLink" name="Dyson Pure Link" author="Jan-Jaap Kostelijk" version="2.2.0" wikilink="https://github.com/JanJaapKo/DysonPureLink.wiki.git" externallink="https://github.com/JanJaapKo/DysonPureLink">
     <description>
         <h2>Dyson Pure Link plugin</h2><br/>
         Connects to Dyson Pure Link devices<br/>
@@ -32,7 +32,7 @@
     <params>
 		<param field="Address" label="IP Address" required="true"/>
 		<param field="Port" label="Port" width="30px" required="true" default="1883"/>
-		<param field="Mode1" label="Dyson type number" width="75px">
+		<param field="Mode1" label="Dyson type number (local)" width="75px">
             <options>
                 <option label="438" value="438"/>
                 <option label="455" value="455"/>
@@ -42,10 +42,11 @@
                 <option label="527" value="527"/>
             </options>
         </param>
-		<param field="Username" label="Dyson Serial No." required="false"/>
-		<param field="Password" label="Dyson Password (see machine)" required="false" password="true"/>
-		<param field="Mode5" label="Dyson account email adress" default="sinterklaas@gmail.com" width="300px" required="false"/>
-        <param field="Mode3" label="Dyson account password" required="false" default="" password="true"/>
+		<param field="Username" label="Dyson Serial No. (local)" required="false"/>
+		<param field="Password" label="Dyson Password (local, see machine)" required="false" password="true"/>
+		<param field="Mode5" label="Dyson cloud account email adress" default="sinterklaas@gmail.com" width="300px" required="false"/>
+        <param field="Mode3" label="Dyson cloud account password" required="false" default="" password="true"/>
+        <param field="Mode6" label="Machine name (cloud account)" required="false" default=""/>
 		<param field="Mode4" label="Debug" width="75px">
             <options>
                 <option label="Verbose" value="Verbose"/>
@@ -191,7 +192,8 @@ class DysonPureLinkPlugin:
         Domoticz.Debug("=== start making connection to Dyson account ===")
         dysonAccount = DysonAccount(Parameters['Mode5'], Parameters['Mode3'], "NL")
         dysonAccount.login()
-        deviceList = ()
+        #deviceList = ()
+        deviceList = []
         deviceList = dysonAccount.devices()
         
         if deviceList == None or len(deviceList)<1:
@@ -199,8 +201,19 @@ class DysonPureLinkPlugin:
         else:
             Domoticz.Debug("Number of devices from cloud: '"+str(len(deviceList))+"'")
 
-        if deviceList != None and len(deviceList)>0:
-            self.myDevice=deviceList[0]
+        if deviceList != None and len(deviceList) > 0:
+            if len(Parameters['Mode6']) > 0:
+                if Parameters['Mode6'] in deviceList:
+                    self.myDevice = deviceList[Parameters['Mode6']]
+                else:
+                    Domoticz.Error("The configured device name '" + Parameters['Mode6'] + "' was not found in the cloud account. Available options: " + str(list(deviceList)))
+                    return
+            elif len(deviceList) == 1:
+                self.myDevice = deviceList[list(deviceList)[0]]
+                Domoticz.Log("1 device found in cloud, none configured, assuming we need this one: '" + self.myDevice.name + "'")
+            else:
+                Domoticz.Error("More than 1 device found in cloud account but no device name given to select")
+                return
             Domoticz.Debug("local device pwd:      '"+self.password+"'")
             Domoticz.Debug("cloud device pwd:      '"+self.myDevice.password+"'")
             Parameters['Username'] = self.myDevice.serial #take username from account
@@ -273,16 +286,17 @@ class DysonPureLinkPlugin:
         Domoticz.Log("DysonPureLink plugin: onNotification: " + Name + "," + Subject + "," + Text + "," + Status + "," + str(Priority) + "," + Sound + "," + ImageFile)
 
     def onHeartbeat(self):
-        self.mqttClient.onHeartbeat()
-        self.runCounter = self.runCounter - 1
-        if self.runCounter <= 0:
-            Domoticz.Debug("DysonPureLink plugin: Poll unit")
-            self.runCounter = int(Parameters['Mode2'])
-            topic, payload = self.myDevice.request_state()
-            self.mqttClient.Publish(topic, payload) #ask for update of current status
-            
-        else:
-            Domoticz.Debug("Polling unit in " + str(self.runCounter) + " heartbeats.")
+        if self.myDevice != None:
+            self.mqttClient.onHeartbeat()
+            self.runCounter = self.runCounter - 1
+            if self.runCounter <= 0:
+                Domoticz.Debug("DysonPureLink plugin: Poll unit")
+                self.runCounter = int(Parameters['Mode2'])
+                topic, payload = self.myDevice.request_state()
+                self.mqttClient.Publish(topic, payload) #ask for update of current status
+                
+            else:
+                Domoticz.Debug("Polling unit in " + str(self.runCounter) + " heartbeats.")
 
     def onDeviceRemoved(self, unit):
         Domoticz.Log("DysonPureLink plugin: onDeviceRemoved called for unit '" + str(unit) + "'")

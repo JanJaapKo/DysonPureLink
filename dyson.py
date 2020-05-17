@@ -2,12 +2,10 @@
 
 import Domoticz
 import requests
-# import urllib.request
-# import urllib.parse
 from dyson_device import DysonDevice
 
 DYSON_API_URL = "appapi.cp.dyson.com"
-#DYSON_API_URL = "api.cp.dyson.com"
+#DYSON_API_URL = "api.cp.dyson.com" #old API URL
 
 class DysonAccount:
     """Dyson account."""
@@ -52,12 +50,12 @@ class DysonAccount:
             device_response = requests.get(
                 "https://{0}/v1/provisioningservice/manifest".format(
                     DYSON_API_URL), verify=False, auth=self._auth)
-            devices = []
+            devices_dict = {}
             for device in device_response.json():
                 Domoticz.Debug("Device returned from Dyson: "+str(device)+"'")
                 dyson_device = DysonDevice(device)
-                devices.append(dyson_device)
-            return devices
+                devices_dict[dyson_device.name] = dyson_device
+            return devices_dict
         else:
             Domoticz.Log("Not logged to Dyson Web Services.")
             #raise DysonNotLoggedException()
