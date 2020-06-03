@@ -191,7 +191,7 @@ class DysonPureLinkPlugin:
         
         #create a Dyson account
         Domoticz.Debug("=== start making connection to Dyson account ===")
-        dysonAccount = DysonAccount(Parameters['Mode5'], Parameters['Mode3'], "NL")
+        dysonAccount = DysonAccount(Parameters['Mode5'], Parameters['Mode3'], "DE")
         dysonAccount.login()
         #deviceList = ()
         deviceList = []

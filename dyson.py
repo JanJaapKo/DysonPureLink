@@ -51,6 +51,7 @@ class DysonAccount:
                 "https://{0}/v1/provisioningservice/manifest".format(
                     DYSON_API_URL), verify=False, auth=self._auth)
             devices_dict = {}
+            Domoticz.Debug("Reply from Dyson: "+str(device_response.json())+"'")
             for device in device_response.json():
                 Domoticz.Debug("Device returned from Dyson: "+str(device)+"'")
                 dyson_device = DysonDevice(device)
