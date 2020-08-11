@@ -5,6 +5,7 @@ import requests
 from dyson_device import DysonDevice
 
 DYSON_API_URL = "appapi.cp.dyson.com"
+#DYSON_API_URL = "appapi.cpstage.dyson.com"
 #DYSON_API_URL = "api.cp.dyson.com" #old API URL
 
 class DysonAccount:

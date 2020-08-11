@@ -103,7 +103,7 @@ class SensorsData(object):
         sleep_timer = data['sltm']
 
         if 'pact' in data:
-            self.particles = int(data['pact'])
+            self.particles = None if data['pact'] == 'INIT' else int(data['pact'])
         self.humidity = None if humidity == 'OFF' else int(humidity)
         self.temperature = None if temperature == 'OFF' else self.kelvin_to_celsius(float(temperature) / 10)
         self.volatile_compounds = 0 if volatile_compounds == 'INIT' else int(volatile_compounds)
