@@ -29,7 +29,7 @@ git pull https://github.com/JanJaapKo/DysonPureLink
 4. Set your MQTT server address and port to plugin settings
 
 ## Configuration
-See the Wiki page for configuration information.
+See the Wiki (https://github.com/JanJaapKo/DysonPureLink/wiki) page for configuration information.
 
 ## Credits
 
