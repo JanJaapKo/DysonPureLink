@@ -3,31 +3,33 @@
 # Author: Jan-Jaap Kostelijk
 #
 """
-<plugin key="DysonPureLink" name="Dyson Pure Link" author="Jan-Jaap Kostelijk" version="2.2.2" wikilink="https://github.com/JanJaapKo/DysonPureLink/wiki" externallink="https://github.com/JanJaapKo/DysonPureLink">
+<plugin key="DysonPureLink" name="Dyson Pure Link" author="Jan-Jaap Kostelijk" version="2.2.3" wikilink="https://github.com/JanJaapKo/DysonPureLink/wiki" externallink="https://github.com/JanJaapKo/DysonPureLink">
     <description>
         <h2>Dyson Pure Link plugin</h2><br/>
-        Connects to Dyson Pure Link devices<br/>
-        It reads the machines states and sensors and it can control it via commands.<br/><br/>
-		Has been tested with type 475, assumed the others work too.<br/><br/>
+        Connects to Dyson Pure Link devices.
+        It reads the machine's states and sensors and it can control it via commands.<br/><br/>
+		This plugin has been tested with a PureCool type 475 (pre 2018), it is assumed the other types work too. There are known issues in retreiving information from the cloud account, see git page for the issues.<br/><br/>
         <h2>Configuration</h2>
-        <ul>
-            <li>Choose one of the following options:</li>
-            <ol type="a">
-                <li>using local credentials as on your Pure Cool Link device</li>
-                <ol>
-                    <li>the machine's IP adress</li>
-                    <li>the port number (should normally remain 1883)</li>
-                    <li>select the correct machine type number</li>
-                    <li>enter the serial number</li>
-                </ol>
-                <li>Using the Dyson account credentials:</li>
-                <ol type="a">
-                    <li>enter the email adress under "Dyson account email adress"</li>
-                    <li>enter the password under "Dyson account password"</li>
-                    <li>enter the machine's name under "machine name" when there are more than 1 machines linked to the account</li>
-                </ol>
+        To configure the plugin, provide all in step A and choose step B or C. See the Wiki for more info.<br/><br/>
+        <ol type="A">
+            <li>provide the machine's local network adress:</li>
+            <ol>
+                <li>the machine's IP adress</li>
+                <li>the port number (should normally remain 1883)</li>
             </ol>
-        </ul>
+            <li>When using local credentials as on your Pure Cool Link device, provide:</li>
+            <ol>
+                <li>select the correct machine type number</li>
+                <li>enter the device serial number</li>
+                <li>enter the device password</li>
+            </ol>
+            <li>When using the Dyson account credentials, provide:</li>
+            <ol>
+                <li>enter the email adress under "Cloud account email adress"</li>
+                <li>enter the password under "Cloud account password"</li>
+                <li>optional: enter the machine's name under "machine name" when there is more than 1 machines linked to the account</li>
+            </ol>
+        </ol>
         
     </description>
     <params>
@@ -43,10 +45,10 @@
                 <option label="527" value="527"/>
             </options>
         </param>
-		<param field="Username" label="Dyson Serial No. (local)" required="false"/>
-		<param field="Password" label="Dyson Password (local, see machine)" required="false" password="true"/>
-		<param field="Mode5" label="Dyson cloud account email adress" default="sinterklaas@gmail.com" width="300px" required="false"/>
-        <param field="Mode3" label="Dyson cloud account password" required="false" default="" password="true"/>
+		<param field="Username" label="Device Serial No. (local)" required="false"/>
+		<param field="Password" label="Device Password (local, see machine)" required="false" password="true"/>
+		<param field="Mode5" label="Cloud account email adress" default="sinterklaas@gmail.com" width="300px" required="false"/>
+        <param field="Mode3" label="Cloud account password" required="false" default="" password="true"/>
         <param field="Mode6" label="Machine name (cloud account)" required="false" default=""/>
 		<param field="Mode4" label="Debug" width="75px">
             <options>
