@@ -71,6 +71,12 @@ class StandbyMonitoring(object):
     ON = 'ON'
     OFF = 'OFF'
 
+class HeatMode(object):
+    """Enum for heater mode and state"""
+
+    HEAT = 'HEAT'
+    OFF = 'OFF'
+
 """Custom Errors"""
 class ConnectionError(Exception):
     """Custom error to handle connect device issues"""
@@ -94,6 +100,7 @@ class SensorsData(object):
     particles2_5 = None
     particles10 = None
     nitrogenDioxideDensity = None
+    heat_target = None
     
     def __init__(self, message):
         data = message['data']
@@ -115,6 +122,9 @@ class SensorsData(object):
             self.particles10 = int(data['p10r']) 
         if 'noxl' in data:
             self.nitrogenDioxideDensity = int(data['noxl'])
+        if 'hmax' in data:
+            target = data['hmax']
+            self.heat_target = None if target == 'OFF' else self.kelvin_to_celsius(float(target) / 10)
 
     def __repr__(self):
         """Return a String representation"""
@@ -150,6 +160,7 @@ class StateData(object):
     filter_life = None
     error_code = None
     warning_code = None
+    heat_mode = None
 
     def __init__(self, message):
         data = message['product-state']
@@ -172,6 +183,8 @@ class StateData(object):
             self.filter_life = int(self._get_field_value(data['filf'])) #0000 - 4300
         if 'qtar' in data:
             self.quality_target = QualityTarget(self._get_field_value(data['qtar'])) #0001 (high), 0003 (medium) , 0004 (normal)
+        if 'hmod' in data:
+            self.heat_mode = HeatMode(self._get_field_value(data['hmod'])) #ON, HEAT
         self.standby_monitoring = FanMode(self._get_field_value(data['rhtm'])) # ON, OFF
         self.error_code = self._get_field_value(data['ercd']) #I think this is an errorcode: NONE when filter needs replacement
         self.warning_code = self._get_field_value(data['wacd']) #I think this is Warning: FLTR when filter needs replacement

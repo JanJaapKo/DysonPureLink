@@ -1,6 +1,7 @@
 """basic commands for Dyson devices"""
 
 import json, os, time
+from exceptions import DysonInvalidTargetTemperatureException as DITTE
 
 class DysonCommands(object):
 
@@ -86,6 +87,11 @@ class DysonCommands(object):
         command = self._create_command({'auto': mode})
         return(self.device_command, command);
 
+    def set_heat_mode(self, mode):
+        """Changes heating mode: HEAT|OFF"""
+        command = self._create_command({'hmod': mode})
+        return(self.device_command, command);
+
     def set_quality_target(self, mode):
         """Changes quality target: 0001..0004"""
         if mode == 10 : level = 4
@@ -94,3 +100,32 @@ class DysonCommands(object):
         arg="000"+str(level)
         command = self._create_command({'qtar': arg})
         return(self.device_command, command);
+    def set_heat_target(self, target):
+        """Sends the target temperature"""
+        arg = HeatTarget.celsius(target)
+        command = self._create_command({'hmax': arg})
+        return(self.device_command, command);
+
+class HeatTarget:
+    """Heat Target for fan. Note dyson uses kelvin as the temperature unit."""
+
+    @staticmethod
+    def celsius(temperature):
+        """Convert the given int celsius temperature to string in Kelvin.
+
+        :param temperature temperature in celsius between 1 to 37 inclusive.
+        """
+        if temperature < 1 or temperature > 37:
+            raise DITTE(DITTE.CELSIUS, temperature)
+        return str((int(temperature) + 273) * 10)
+
+    @staticmethod
+    def fahrenheit(temperature):
+        """Convert the given int fahrenheit temperature to string in Kelvin.
+
+        :param temperature temperature in fahrenheit between 34 to 98
+                            inclusive.
+        """
+        if temperature < 34 or temperature > 98:
+            raise DITTE(DITTE.FAHRENHEIT, temperature)
+        return str(int((int(temperature) + 459.67) * 5/9) * 10)

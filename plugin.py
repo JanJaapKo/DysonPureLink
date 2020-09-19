@@ -3,7 +3,7 @@
 # Author: Jan-Jaap Kostelijk
 #
 """
-<plugin key="DysonPureLink" name="Dyson Pure Link" author="Jan-Jaap Kostelijk" version="2.2.3" wikilink="https://github.com/JanJaapKo/DysonPureLink/wiki" externallink="https://github.com/JanJaapKo/DysonPureLink">
+<plugin key="DysonPureLink" name="Dyson Pure Link" author="Jan-Jaap Kostelijk" version="2.3.1" wikilink="https://github.com/JanJaapKo/DysonPureLink/wiki" externallink="https://github.com/JanJaapKo/DysonPureLink">
     <description>
         <h2>Dyson Pure Link plugin</h2><br/>
         Connects to Dyson Pure Link devices.
@@ -103,6 +103,8 @@ class DysonPureLinkPlugin:
     particles2_5Unit = 15
     particles10Unit = 16
     nitrogenDioxideDensityUnit = 17
+    heatModeUnit = 18
+    heatTargetUnit = 19
     runCounter = 6
 
     def __init__(self):
@@ -183,6 +185,14 @@ class DysonPureLinkPlugin:
             Domoticz.Device(Name='Fan focus mode', Unit=self.fanFocusUnit, Type=244, Subtype=62,Image=7, Switchtype=0).Create()
         if self.nitrogenDioxideDensityUnit not in Devices:
             Domoticz.Device(Name='Nitrogen Dioxide Density (NOx)', Unit=self.nitrogenDioxideDensityUnit, TypeName="Air Quality").Create()
+        if self.heatModeUnit not in Devices:
+            Options = {"LevelActions" : "||",
+                       "LevelNames" : "|Off|Heating",
+                       "LevelOffHidden" : "true",
+                       "SelectorStyle" : "1"}
+            Domoticz.Device(Name='Heat mode', Unit=self.heatModeUnit, TypeName="Selector Switch", Image=7, Options=Options).Create()
+        if self.heatTargetUnit not in Devices:
+            Domoticz.Device(Name='Heat target', Unit=self.heatTargetUnit, Type=242, Subtype=1).Create()
 
         #read out parameters for local connection
         self.ip_address = Parameters["Address"].strip()
@@ -271,6 +281,12 @@ class DysonPureLinkPlugin:
             topic, payload = self.myDevice.set_standby_monitoring(str(Command).upper()) 
         if Unit == self.nightModeUnit:
             topic, payload = self.myDevice.set_night_mode(str(Command).upper()) 
+        if Unit == self.heatModeUnit:
+            if Level == 10: arg="OFF"
+            if Level == 20: arg="HEAT"
+            topic, payload = self.myDevice.set_heat_mode(arg) 
+        if Unit == self.heatTargetUnit:
+            topic, payload = self.myDevice.set_heat_target(Level) 
 
         self.mqttClient.Publish(topic, payload)
 
@@ -326,6 +342,8 @@ class DysonPureLinkPlugin:
             UpdateDevice(self.fanModeAutoUnit, self.state_data.fan_mode_auto.state, str((self.state_data.fan_mode_auto.state+1)*10))
         if self.state_data.focus is not None:
             UpdateDevice(self.fanFocusUnit, self.state_data.focus.state, str(self.state_data.focus))
+        if self.state_data.heat_mode is not None:
+            UpdateDevice(self.heatModeUnit, self.state_data.heat_mode.state, str(self.state_data.heat_mode))
 
     def updateSensors(self):
         """Update the defined devices from incoming mesage info"""
@@ -343,6 +361,8 @@ class DysonPureLinkPlugin:
             UpdateDevice(self.particles10Unit, self.sensor_data.particles10, str(self.sensor_data.particles10))
         if self.sensor_data.nitrogenDioxideDensity is not None:
             UpdateDevice(self.nitrogenDioxideDensityUnit, self.sensor_data.nitrogenDioxideDensity, str(self.sensor_data.nitrogenDioxideDensity))
+        if self.sensor_data.heat_target is not None:
+            UpdateDevice(self.heatTargetUnit, self.sensor_data.heat_target, str(self.sensor_data.heat_target))
         UpdateDevice(self.sleepTimeUnit, self.sensor_data.sleep_timer, str(self.sensor_data.sleep_timer))
         Domoticz.Debug("update SensorData: " + str(self.sensor_data))
         Domoticz.Debug("update StateData: " + str(self.state_data))
@@ -444,9 +464,9 @@ def onHeartbeat():
     global _plugin
     _plugin.onHeartbeat()
 
-def onDeviceRemoved():
+def onDeviceRemoved(Unit):
     global _plugin
-    _plugin.onDeviceRemoved()
+    _plugin.onDeviceRemoved(Unit)
 
     # Generic helper functions
 def DumpConfigToLog():
