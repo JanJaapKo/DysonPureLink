@@ -71,11 +71,20 @@ class StandbyMonitoring(object):
     ON = 'ON'
     OFF = 'OFF'
 
-class HeatMode(object):
+class HeatMode():
     """Enum for heater mode and state"""
 
     HEAT = 'HEAT'
     OFF = 'OFF'
+    _state = None
+    
+    def __init__(self, state):
+        """go from string to state object"""
+        if state.upper() == 'OFF': self._state = self.OFF
+        if state.upper() == 'HEAT': self._state = self.HEAT
+
+    def __repr__(self):
+        return self._state
 
 """Custom Errors"""
 class ConnectionError(Exception):
