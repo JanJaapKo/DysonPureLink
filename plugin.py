@@ -344,6 +344,8 @@ class DysonPureLinkPlugin:
             UpdateDevice(self.fanFocusUnit, self.state_data.focus.state, str(self.state_data.focus))
         if self.state_data.heat_mode is not None:
             UpdateDevice(self.heatModeUnit, self.state_data.heat_mode.state, str(self.state_data.heat_mode))
+        if self.state_data.heat_target is not None:
+            UpdateDevice(self.heatTargetUnitUnit, self.state_data.heat_target, str(self.state_data.heat_target))
 
     def updateSensors(self):
         """Update the defined devices from incoming mesage info"""
