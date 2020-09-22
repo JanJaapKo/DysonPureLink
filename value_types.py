@@ -88,8 +88,8 @@ class HeatMode():
 
     @property
     def state(self):
-        if self._state == self.OFF: return 0
-        if self._state == self.HEAT: return 1
+        if self._state == self.OFF: return 10
+        if self._state == self.HEAT: return 20
 
 """Custom Errors"""
 class ConnectionError(Exception):
