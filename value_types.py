@@ -86,6 +86,11 @@ class HeatMode():
     def __repr__(self):
         return self._state
 
+    @property
+    def state(self):
+        if self._state == self.OFF: return 0
+        if self._state == self.HEAT: return 1
+
 """Custom Errors"""
 class ConnectionError(Exception):
     """Custom error to handle connect device issues"""
