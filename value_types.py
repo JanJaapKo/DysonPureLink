@@ -46,6 +46,7 @@ class QualityTarget():
     MEDIUM = 'MEDIUM'
     NORMAL = 'NORMAL'
     UNKNOWN = 'UNKNOWN'
+    OFF = 'OFF'
     _state = None
     
     def __init__(self, state):
@@ -54,6 +55,7 @@ class QualityTarget():
         if state.upper() == '0002': self._state = self.UNKNOWN
         if state.upper() == '0003': self._state = self.MEDIUM
         if state.upper() == '0004': self._state = self.NORMAL
+        if state.upper() == 'OFF': self._state = self.OFF
     
     def __repr__(self):
         return self._state
@@ -64,6 +66,7 @@ class QualityTarget():
         if self._state == self.MEDIUM: return 1
         if self._state == self.HIGH: return 2
         if self._state == self.UNKNOWN: return 3
+        if self._state == self.OFF: return 4
     
 class StandbyMonitoring(object):
     """Enum for monitor air quality when on standby"""
@@ -124,10 +127,10 @@ class SensorsData(object):
         sleep_timer = data['sltm']
 
         if 'pact' in data:
-            self.particles = None if data['pact'] == 'INIT' else int(data['pact'])
+            self.particles = None if data['pact'] == 'INIT' or data['pact'] == 'OFF' else int(data['pact'])
         self.humidity = None if humidity == 'OFF' else int(humidity)
         self.temperature = None if temperature == 'OFF' else self.kelvin_to_celsius(float(temperature) / 10)
-        self.volatile_compounds = 0 if volatile_compounds == 'INIT' else int(volatile_compounds)
+        self.volatile_compounds = None if volatile_compounds == 'INIT' or volatile_compounds == 'OFF' else int(volatile_compounds)
         self.sleep_timer = 0 if sleep_timer == 'OFF' else int(sleep_timer)
 
         if 'p25r' in data:

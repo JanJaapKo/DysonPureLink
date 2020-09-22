@@ -3,7 +3,7 @@
 # Author: Jan-Jaap Kostelijk
 #
 """
-<plugin key="DysonPureLink" name="Dyson Pure Link" author="Jan-Jaap Kostelijk" version="2.3.1" wikilink="https://github.com/JanJaapKo/DysonPureLink/wiki" externallink="https://github.com/JanJaapKo/DysonPureLink">
+<plugin key="DysonPureLink" name="Dyson Pure Link" author="Jan-Jaap Kostelijk" version="2.3.2" wikilink="https://github.com/JanJaapKo/DysonPureLink/wiki" externallink="https://github.com/JanJaapKo/DysonPureLink">
     <description>
         <h2>Dyson Pure Link plugin</h2><br/>
         Connects to Dyson Pure Link devices.
@@ -167,8 +167,8 @@ class DysonPureLinkPlugin:
         if self.particlesUnit not in Devices:
             Domoticz.Device(Name='Dust', Unit=self.particlesUnit, TypeName="Air Quality").Create()
         if self.qualityTargetUnit not in Devices:
-            Options = {"LevelActions" : "||",
-                       "LevelNames" : "|Normal|Sensitive (Medium)|Very Sensitive (High)",
+            Options = {"LevelActions" : "|||",
+                       "LevelNames" : "|Normal|Sensitive (Medium)|Very Sensitive (High)|Off",
                        "LevelOffHidden" : "true",
                        "SelectorStyle" : "1"}
             Domoticz.Device(Name='Air quality setpoint', Unit=self.qualityTargetUnit, TypeName="Selector Switch", Image=7, Options=Options).Create()
@@ -354,7 +354,8 @@ class DysonPureLinkPlugin:
             tempNum = int(self.sensor_data.temperature)
             humNum = int(self.sensor_data.humidity)
             UpdateDevice(self.tempHumUnit, 1, str(self.sensor_data.temperature)[:4] +';'+ str(self.sensor_data.humidity) + ";1")
-        UpdateDevice(self.volatileUnit, self.sensor_data.volatile_compounds, str(self.sensor_data.volatile_compounds))
+        if self.sensor_data.volatile_compounds is not None:
+            UpdateDevice(self.volatileUnit, self.sensor_data.volatile_compounds, str(self.sensor_data.volatile_compounds))
         if self.sensor_data.particles is not None:
             UpdateDevice(self.particlesUnit, self.sensor_data.particles, str(self.sensor_data.particles))
         if self.sensor_data.particles2_5 is not None:
