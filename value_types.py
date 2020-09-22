@@ -129,7 +129,7 @@ class SensorsData(object):
         if 'pact' in data:
             self.particles = None if data['pact'] == 'INIT' or data['pact'] == 'OFF' else int(data['pact'])
         self.humidity = None if humidity == 'OFF' else int(humidity)
-        self.temperature = None if temperature == 'OFF' else self.kelvin_to_celsius(float(temperature) / 10)
+        self.temperature = None if temperature == 'OFF' else kelvin_to_celsius(float(temperature) / 10)
         self.volatile_compounds = None if volatile_compounds == 'INIT' or volatile_compounds == 'OFF' else int(volatile_compounds)
         self.sleep_timer = 0 if sleep_timer == 'OFF' else int(sleep_timer)
 
@@ -139,9 +139,6 @@ class SensorsData(object):
             self.particles10 = int(data['p10r']) 
         if 'noxl' in data:
             self.nitrogenDioxideDensity = int(data['noxl'])
-        if 'hmax' in data:
-            target = data['hmax']
-            self.heat_target = None if target == 'OFF' else self.kelvin_to_celsius(float(target) / 10)
 
     def __repr__(self):
         """Return a String representation"""
@@ -196,7 +193,11 @@ class StateData(object):
         if 'hmod' in data:
             self.heat_mode = HeatMode(self._get_field_value(data['hmod'])) #OFF, HEAT
         if 'hmax' in data:
-            self.heat_target = kelvin_to_celsius(self._get_field_value(data['hmax'])) #temperature target
+            #self.heat_target = kelvin_to_celsius(self._get_field_value(data['hmax'])) #temperature target
+            target = data['hmax']
+            self.heat_target = None if target == 'OFF' else kelvin_to_celsius(float(target) / 10)
+
+
         self.standby_monitoring = FanMode(self._get_field_value(data['rhtm'])) # ON, OFF
         self.error_code = self._get_field_value(data['ercd']) #I think this is an errorcode: NONE when filter needs replacement
         self.warning_code = self._get_field_value(data['wacd']) #I think this is Warning: FLTR when filter needs replacement
