@@ -71,6 +71,26 @@ class StandbyMonitoring(object):
     ON = 'ON'
     OFF = 'OFF'
 
+class HeatMode():
+    """Enum for heater mode and state"""
+
+    HEAT = 'HEAT'
+    OFF = 'OFF'
+    _state = None
+    
+    def __init__(self, state):
+        """go from string to state object"""
+        if state.upper() == 'OFF': self._state = self.OFF
+        if state.upper() == 'HEAT': self._state = self.HEAT
+
+    def __repr__(self):
+        return self._state
+
+    @property
+    def state(self):
+        if self._state == self.OFF: return 10
+        if self._state == self.HEAT: return 20
+
 """Custom Errors"""
 class ConnectionError(Exception):
     """Custom error to handle connect device issues"""
@@ -94,6 +114,7 @@ class SensorsData(object):
     particles2_5 = None
     particles10 = None
     nitrogenDioxideDensity = None
+    heat_target = None
     
     def __init__(self, message):
         data = message['data']
@@ -115,6 +136,9 @@ class SensorsData(object):
             self.particles10 = int(data['p10r']) 
         if 'noxl' in data:
             self.nitrogenDioxideDensity = int(data['noxl'])
+        if 'hmax' in data:
+            target = data['hmax']
+            self.heat_target = None if target == 'OFF' else self.kelvin_to_celsius(float(target) / 10)
 
     def __repr__(self):
         """Return a String representation"""
@@ -129,14 +153,6 @@ class SensorsData(object):
     def is_sensors_data(message):
         return message['msg'] in ['ENVIRONMENTAL-CURRENT-SENSOR-DATA']
 
-    @staticmethod
-    def kelvin_to_fahrenheit (kelvin_value):
-        return kelvin_value * 9 / 5 - 459.67
-
-    @staticmethod
-    def kelvin_to_celsius (kelvin_value):
-        return kelvin_value - 272.15
-
 class StateData(object):
     """Value type for state data"""
     fan_mode = None
@@ -150,6 +166,8 @@ class StateData(object):
     filter_life = None
     error_code = None
     warning_code = None
+    heat_mode = None
+    heat_target = None
 
     def __init__(self, message):
         data = message['product-state']
@@ -172,6 +190,10 @@ class StateData(object):
             self.filter_life = int(self._get_field_value(data['filf'])) #0000 - 4300
         if 'qtar' in data:
             self.quality_target = QualityTarget(self._get_field_value(data['qtar'])) #0001 (high), 0003 (medium) , 0004 (normal)
+        if 'hmod' in data:
+            self.heat_mode = HeatMode(self._get_field_value(data['hmod'])) #OFF, HEAT
+        if 'hmax' in data:
+            self.heat_target = kelvin_to_celsius(self._get_field_value(data['hmax'])) #temperature target
         self.standby_monitoring = FanMode(self._get_field_value(data['rhtm'])) # ON, OFF
         self.error_code = self._get_field_value(data['ercd']) #I think this is an errorcode: NONE when filter needs replacement
         self.warning_code = self._get_field_value(data['wacd']) #I think this is Warning: FLTR when filter needs replacement
@@ -193,3 +215,9 @@ class StateData(object):
     @staticmethod
     def is_state_data(message):
         return message['msg'] in ['CURRENT-STATE', 'STATE-CHANGE']
+
+def kelvin_to_fahrenheit (kelvin_value):
+    return kelvin_value * 9 / 5 - 459.67
+
+def kelvin_to_celsius (kelvin_value):
+    return kelvin_value - 272.15
