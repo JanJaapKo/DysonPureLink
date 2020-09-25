@@ -105,6 +105,7 @@ class DysonPureLinkPlugin:
     nitrogenDioxideDensityUnit = 17
     heatModeUnit = 18
     heatTargetUnit = 19
+    heatStateUnit = 20
     runCounter = 6
 
     def __init__(self):
@@ -141,6 +142,8 @@ class DysonPureLinkPlugin:
                    "SelectorStyle" : "1"}
         if self.fanStateUnit not in Devices:
             Domoticz.Device(Name='Fan state', Unit=self.fanStateUnit, TypeName="Selector Switch", Image=7, Options=Options).Create()
+        if self.heatStateUnit not in Devices:
+            Domoticz.Device(Name='Heating state', Unit=self.heatStateUnit, TypeName="Selector Switch", Image=7, Options=Options).Create()
         if self.nightModeUnit not in Devices:
             Domoticz.Device(Name='Night mode', Unit=self.nightModeUnit, Type=244, Subtype=62,  Switchtype=0, Image=9).Create()
             
@@ -347,6 +350,9 @@ class DysonPureLinkPlugin:
         if self.state_data.heat_target is not None:
             #UpdateDevice(self.heatTargetUnit, int(self.state_data.heat_target), str(self.state_data.heat_target))
             UpdateDevice(self.heatTargetUnit, 0, str(self.state_data.heat_target))
+        if self.state_data.heat_state is not None:
+            UpdateDevice(self.heatStateUnit, self.state_data.heat_state.state, str((self.state_data.heat_state.state+1)*10))
+
 
     def updateSensors(self):
         """Update the defined devices from incoming mesage info"""

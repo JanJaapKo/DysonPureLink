@@ -167,6 +167,7 @@ class StateData(object):
     error_code = None
     warning_code = None
     heat_mode = None
+    heat_state = None
     heat_target = None
 
     def __init__(self, message):
@@ -195,7 +196,9 @@ class StateData(object):
         if 'hmax' in data:
             #self.heat_target = kelvin_to_celsius(self._get_field_value(data['hmax'])) #temperature target
             target = self._get_field_value(data['hmax'])
-            self.heat_target = None if target == 'OFF' else kelvin_to_celsius(float(target) / 10)
+            self.heat_target = None if target == 'OFF' else int(kelvin_to_celsius(float(target) / 10))
+        if 'hsta' in data:
+            self.heat_state = FanMode(self._get_field_value(data['hsta'])) #OFF, ON
 
 
         self.standby_monitoring = FanMode(self._get_field_value(data['rhtm'])) # ON, OFF
