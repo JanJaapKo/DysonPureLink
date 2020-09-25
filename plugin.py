@@ -3,7 +3,7 @@
 # Author: Jan-Jaap Kostelijk
 #
 """
-<plugin key="DysonPureLink" name="Dyson Pure Link" author="Jan-Jaap Kostelijk" version="2.3.2" wikilink="https://github.com/JanJaapKo/DysonPureLink/wiki" externallink="https://github.com/JanJaapKo/DysonPureLink">
+<plugin key="DysonPureLink" name="Dyson Pure Link" author="Jan-Jaap Kostelijk" version="2.3.3" wikilink="https://github.com/JanJaapKo/DysonPureLink/wiki" externallink="https://github.com/JanJaapKo/DysonPureLink">
     <description>
         <h2>Dyson Pure Link plugin</h2><br/>
         Connects to Dyson Pure Link devices.
@@ -345,7 +345,7 @@ class DysonPureLinkPlugin:
         if self.state_data.heat_mode is not None:
             UpdateDevice(self.heatModeUnit, self.state_data.heat_mode.state, str(self.state_data.heat_mode))
         if self.state_data.heat_target is not None:
-            UpdateDevice(self.heatTargetUnitUnit, self.state_data.heat_target, str(self.state_data.heat_target))
+            UpdateDevice(self.heatTargetUnit, self.state_data.heat_target, str(self.state_data.heat_target))
 
     def updateSensors(self):
         """Update the defined devices from incoming mesage info"""
