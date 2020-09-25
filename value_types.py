@@ -194,7 +194,7 @@ class StateData(object):
             self.heat_mode = HeatMode(self._get_field_value(data['hmod'])) #OFF, HEAT
         if 'hmax' in data:
             #self.heat_target = kelvin_to_celsius(self._get_field_value(data['hmax'])) #temperature target
-            target = data['hmax']
+            target = self._get_field_value(data['hmax'])
             self.heat_target = None if target == 'OFF' else kelvin_to_celsius(float(target) / 10)
 
 
