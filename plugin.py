@@ -3,7 +3,7 @@
 # Author: Jan-Jaap Kostelijk
 #
 """
-<plugin key="DysonPureLink" name="Dyson Pure Link" author="Jan-Jaap Kostelijk" version="2.3.3" wikilink="https://github.com/JanJaapKo/DysonPureLink/wiki" externallink="https://github.com/JanJaapKo/DysonPureLink">
+<plugin key="DysonPureLink" name="Dyson Pure Link" author="Jan-Jaap Kostelijk" version="2.3.4" wikilink="https://github.com/JanJaapKo/DysonPureLink/wiki" externallink="https://github.com/JanJaapKo/DysonPureLink">
     <description>
         <h2>Dyson Pure Link plugin</h2><br/>
         Connects to Dyson Pure Link devices.
@@ -59,8 +59,7 @@
         </param>
         <param field="Mode2" label="Refresh interval" width="75px">
             <options>
-                <option label="10s" value="1"/>
-                <option label="30s" value="3"/>
+                <option label="20s" value="2"/>
                 <option label="1m" value="6"/>
                 <option label="5m" value="30" default="true"/>
                 <option label="10m" value="60"/>
@@ -107,6 +106,7 @@ class DysonPureLinkPlugin:
     heatTargetUnit = 19
     heatStateUnit = 20
     runCounter = 6
+    pingCounter = 3
 
     def __init__(self):
         self.myDevice = None
@@ -203,6 +203,7 @@ class DysonPureLinkPlugin:
         self.password = self._hashed_password(Parameters['Password'])
         mqtt_client_id = ""
         self.runCounter = int(Parameters['Mode2'])
+        self.pingCounter = int(self.runCounter/2)
         
         #create a Dyson account
         Domoticz.Debug("=== start making connection to Dyson account ===")
@@ -308,11 +309,15 @@ class DysonPureLinkPlugin:
 
     def onHeartbeat(self):
         if self.myDevice != None:
-            self.mqttClient.onHeartbeat()
             self.runCounter = self.runCounter - 1
-            if self.runCounter <= 0:
+            self.pingCounter = self.pingCounter - 1
+            if self.pingCounter <= 0 and self.runCounter > 0:
+                self.mqttClient.onHeartbeat()
+                self.pingCounter = int(int(Parameters['Mode2'])/2)
+            elif self.runCounter <= 0:
                 Domoticz.Debug("DysonPureLink plugin: Poll unit")
                 self.runCounter = int(Parameters['Mode2'])
+                self.pingCounter = int(int(Parameters['Mode2'])/2)
                 topic, payload = self.myDevice.request_state()
                 self.mqttClient.Publish(topic, payload) #ask for update of current status
                 

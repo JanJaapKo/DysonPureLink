@@ -106,7 +106,7 @@ class MqttClient:
             self.Ping()
 
     def onMessage(self, Connection, Data):
-        Domoticz.Debug("MqttClient::onMessage")
+        #Domoticz.Debug("MqttClient::onMessage")
         topic = ''
         if 'Topic' in Data:
             topic = Data['Topic']
