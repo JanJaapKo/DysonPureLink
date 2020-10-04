@@ -198,7 +198,7 @@ class StateData(object):
             target = self._get_field_value(data['hmax'])
             self.heat_target = None if target == 'OFF' else int(kelvin_to_celsius(float(target) / 10))
         if 'hsta' in data:
-            self.heat_state = FanMode(self._get_field_value(data['hsta'])) #OFF, ON
+            self.heat_state = HeatMode(self._get_field_value(data['hsta'])) #OFF, HEAT
 
 
         self.standby_monitoring = FanMode(self._get_field_value(data['rhtm'])) # ON, OFF

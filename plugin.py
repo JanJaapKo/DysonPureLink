@@ -3,7 +3,7 @@
 # Author: Jan-Jaap Kostelijk
 #
 """
-<plugin key="DysonPureLink" name="Dyson Pure Link" author="Jan-Jaap Kostelijk" version="2.3.4" wikilink="https://github.com/JanJaapKo/DysonPureLink/wiki" externallink="https://github.com/JanJaapKo/DysonPureLink">
+<plugin key="DysonPureLink" name="Dyson Pure Link" author="Jan-Jaap Kostelijk" version="2.3.5" wikilink="https://github.com/JanJaapKo/DysonPureLink/wiki" externallink="https://github.com/JanJaapKo/DysonPureLink">
     <description>
         <h2>Dyson Pure Link plugin</h2><br/>
         Connects to Dyson Pure Link devices.
@@ -356,7 +356,7 @@ class DysonPureLinkPlugin:
             #UpdateDevice(self.heatTargetUnit, int(self.state_data.heat_target), str(self.state_data.heat_target))
             UpdateDevice(self.heatTargetUnit, 0, str(self.state_data.heat_target))
         if self.state_data.heat_state is not None:
-            UpdateDevice(self.heatStateUnit, self.state_data.heat_state.state, str((self.state_data.heat_state.state+1)*10))
+            UpdateDevice(self.heatStateUnit, self.state_data.heat_state.state, str(self.state_data.heat_state.state))
 
 
     def updateSensors(self):

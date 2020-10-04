@@ -100,6 +100,7 @@ class DysonCommands(object):
         arg="000"+str(level)
         command = self._create_command({'qtar': arg})
         return(self.device_command, command);
+
     def set_heat_target(self, target):
         """Sends the target temperature"""
         arg = HeatTarget.celsius(target)
