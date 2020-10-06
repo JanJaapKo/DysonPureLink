@@ -244,6 +244,7 @@ class DysonPureLinkPlugin:
             self.myDevice = DysonPureLinkDevice(Parameters['Password'], Parameters['Username'], Parameters['Mode1'])
         else:
             Domoticz.Error("No usable credentials found")
+            return
 
         Domoticz.Log("Device instance created: " + str(self.myDevice))
         self.base_topic = self.myDevice.device_base_topic
