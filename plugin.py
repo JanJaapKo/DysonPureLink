@@ -129,6 +129,55 @@ class DysonPureLinkPlugin:
         #PureLink needs polling, get from config
         Domoticz.Heartbeat(10)
         
+        #read out parameters for local connection
+        self.ip_address = Parameters["Address"].strip()
+        self.port_number = Parameters["Port"].strip()
+        self.password = self._hashed_password(Parameters['Password'])
+        mqtt_client_id = ""
+        self.runCounter = int(Parameters['Mode2'])
+        self.pingCounter = int(self.runCounter/2)
+        
+        #create a Dyson account
+        Domoticz.Debug("=== start making connection to Dyson account ===")
+        dysonAccount = DysonAccount(Parameters['Mode5'], Parameters['Mode3'], "NL")
+        dysonAccount.login()
+        #deviceList = ()
+        deviceList = []
+        deviceList = dysonAccount.devices()
+        
+        if deviceList == None or len(deviceList)<1:
+            Domoticz.Log("No devices found in Dyson cloud account")
+        else:
+            Domoticz.Debug("Number of devices from cloud: '"+str(len(deviceList))+"'")
+
+        if deviceList != None and len(deviceList) > 0:
+            if len(Parameters['Mode6']) > 0:
+                if Parameters['Mode6'] in deviceList:
+                    self.myDevice = deviceList[Parameters['Mode6']]
+                else:
+                    Domoticz.Error("The configured device name '" + Parameters['Mode6'] + "' was not found in the cloud account. Available options: " + str(list(deviceList)))
+                    return
+            elif len(deviceList) == 1:
+                self.myDevice = deviceList[list(deviceList)[0]]
+                Domoticz.Log("1 device found in cloud, none configured, assuming we need this one: '" + self.myDevice.name + "'")
+            else:
+                Domoticz.Error("More than 1 device found in cloud account but no device name given to select")
+                return
+            Domoticz.Debug("local device pwd:      '"+self.password+"'")
+            Domoticz.Debug("cloud device pwd:      '"+self.myDevice.password+"'")
+            Parameters['Username'] = self.myDevice.serial #take username from account
+            Parameters['Password'] = self.myDevice.password #override the default password with the one returned from the cloud
+        elif len(Parameters['Username'])>0:
+            Domoticz.Log("No cloud devices found, the local credentials will be used")
+            #create a Dyson device object using plugin parameters
+            Domoticz.Debug("local device pwd:      '"+self.password+"'")
+            Domoticz.Debug("local device usn:      '"+Parameters['Username']+"'")
+            Parameters['Password'] = self.password
+            self.myDevice = DysonPureLinkDevice(Parameters['Password'], Parameters['Username'], Parameters['Mode1'])
+        else:
+            Domoticz.Error("No usable credentials found")
+            return
+
         #check, per device, if it is created. If not,create it
         Options = {"LevelActions" : "|||",
                    "LevelNames" : "|OFF|ON|AUTO",
@@ -197,54 +246,6 @@ class DysonPureLinkPlugin:
         if self.heatTargetUnit not in Devices:
             Domoticz.Device(Name='Heat target', Unit=self.heatTargetUnit, Type=242, Subtype=1).Create()
 
-        #read out parameters for local connection
-        self.ip_address = Parameters["Address"].strip()
-        self.port_number = Parameters["Port"].strip()
-        self.password = self._hashed_password(Parameters['Password'])
-        mqtt_client_id = ""
-        self.runCounter = int(Parameters['Mode2'])
-        self.pingCounter = int(self.runCounter/2)
-        
-        #create a Dyson account
-        Domoticz.Debug("=== start making connection to Dyson account ===")
-        dysonAccount = DysonAccount(Parameters['Mode5'], Parameters['Mode3'], "NL")
-        dysonAccount.login()
-        #deviceList = ()
-        deviceList = []
-        deviceList = dysonAccount.devices()
-        
-        if deviceList == None or len(deviceList)<1:
-            Domoticz.Log("No devices found in Dyson cloud account")
-        else:
-            Domoticz.Debug("Number of devices from cloud: '"+str(len(deviceList))+"'")
-
-        if deviceList != None and len(deviceList) > 0:
-            if len(Parameters['Mode6']) > 0:
-                if Parameters['Mode6'] in deviceList:
-                    self.myDevice = deviceList[Parameters['Mode6']]
-                else:
-                    Domoticz.Error("The configured device name '" + Parameters['Mode6'] + "' was not found in the cloud account. Available options: " + str(list(deviceList)))
-                    return
-            elif len(deviceList) == 1:
-                self.myDevice = deviceList[list(deviceList)[0]]
-                Domoticz.Log("1 device found in cloud, none configured, assuming we need this one: '" + self.myDevice.name + "'")
-            else:
-                Domoticz.Error("More than 1 device found in cloud account but no device name given to select")
-                return
-            Domoticz.Debug("local device pwd:      '"+self.password+"'")
-            Domoticz.Debug("cloud device pwd:      '"+self.myDevice.password+"'")
-            Parameters['Username'] = self.myDevice.serial #take username from account
-            Parameters['Password'] = self.myDevice.password #override the default password with the one returned from the cloud
-        elif len(Parameters['Username'])>0:
-            Domoticz.Log("No cloud devices found, the local credentials will be used")
-            #create a Dyson device object using plugin parameters
-            Domoticz.Debug("local device pwd:      '"+self.password+"'")
-            Domoticz.Debug("local device usn:      '"+Parameters['Username']+"'")
-            Parameters['Password'] = self.password
-            self.myDevice = DysonPureLinkDevice(Parameters['Password'], Parameters['Username'], Parameters['Mode1'])
-        else:
-            Domoticz.Error("No usable credentials found")
-            return
 
         Domoticz.Log("Device instance created: " + str(self.myDevice))
         self.base_topic = self.myDevice.device_base_topic
