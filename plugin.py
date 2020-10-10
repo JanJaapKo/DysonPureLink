@@ -353,12 +353,12 @@ class DysonPureLinkPlugin:
         if self.state_data.focus is not None:
             UpdateDevice(self.fanFocusUnit, self.state_data.focus.state, str(self.state_data.focus))
         if self.state_data.heat_mode is not None:
-            UpdateDevice(self.heatModeUnit, self.state_data.heat_mode.state, str(self.state_data.heat_mode))
+            UpdateDevice(self.heatModeUnit, self.state_data.heat_mode.state, str((self.state_data.heat_mode.state+1)*10))
         if self.state_data.heat_target is not None:
             #UpdateDevice(self.heatTargetUnit, int(self.state_data.heat_target), str(self.state_data.heat_target))
             UpdateDevice(self.heatTargetUnit, 0, str(self.state_data.heat_target))
         if self.state_data.heat_state is not None:
-            UpdateDevice(self.heatStateUnit, self.state_data.heat_state.state, str(self.state_data.heat_state.state))
+            UpdateDevice(self.heatStateUnit, self.state_data.heat_state.state, str((self.state_data.heat_state.state+1)*10))
 
 
     def updateSensors(self):
