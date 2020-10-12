@@ -312,19 +312,20 @@ class DysonPureLinkPlugin:
     def onHeartbeat(self):
         if self.myDevice != None:
             self.runCounter = self.runCounter - 1
-            self.pingCounter = self.pingCounter - 1
-            if self.pingCounter <= 0 and self.runCounter > 0:
-                self.mqttClient.onHeartbeat()
-                self.pingCounter = int(int(Parameters['Mode2'])/2)
-            elif self.runCounter <= 0:
+            # self.pingCounter = self.pingCounter - 1
+            # if self.pingCounter <= 0 and self.runCounter > 0:
+                # self.mqttClient.onHeartbeat()
+                # self.pingCounter = int(int(Parameters['Mode2'])/2)
+            if self.runCounter <= 0:
                 Domoticz.Debug("DysonPureLink plugin: Poll unit")
                 self.runCounter = int(Parameters['Mode2'])
-                self.pingCounter = int(int(Parameters['Mode2'])/2)
+                #self.pingCounter = int(int(Parameters['Mode2'])/2)
                 topic, payload = self.myDevice.request_state()
                 self.mqttClient.Publish(topic, payload) #ask for update of current status
                 
             else:
                 Domoticz.Debug("Polling unit in " + str(self.runCounter) + " heartbeats.")
+                self.mqttClient.onHeartbeat()
 
     def onDeviceRemoved(self, unit):
         Domoticz.Log("DysonPureLink plugin: onDeviceRemoved called for unit '" + str(unit) + "'")
