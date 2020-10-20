@@ -77,7 +77,7 @@ import base64, hashlib
 from mqtt import MqttClient
 from dyson_pure_link_device import DysonPureLinkDevice
 from dyson import DysonAccount
-from value_types import CONNECTION_STATE, DISCONNECTION_STATE, FanMode, StandbyMonitoring, ConnectionError, DisconnectionError, SensorsData, StateData
+from value_types import SensorsData, StateData
 
 class DysonPureLinkPlugin:
     #define class variables

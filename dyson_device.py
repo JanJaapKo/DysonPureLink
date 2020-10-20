@@ -2,8 +2,8 @@
 
 import json
 import time
-import commands
 
+import commands
 from utils import printable_fields
 from utils import decrypt_password
 

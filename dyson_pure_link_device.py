@@ -2,7 +2,6 @@
 
 import commands
 
-from value_types import CONNECTION_STATE, DISCONNECTION_STATE, FanMode, StandbyMonitoring, ConnectionError, DisconnectionError, SensorsData, StateData
 
 class DysonPureLinkDevice(commands.DysonCommands):
     """Dyson device created from plugin parameters"""
