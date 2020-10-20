@@ -3,7 +3,7 @@
 # Author: Jan-Jaap Kostelijk
 #
 """
-<plugin key="DysonPureLink" name="Dyson Pure Link" author="Jan-Jaap Kostelijk" version="2.3.6" wikilink="https://github.com/JanJaapKo/DysonPureLink/wiki" externallink="https://github.com/JanJaapKo/DysonPureLink">
+<plugin key="DysonPureLink" name="Dyson Pure Link" author="Jan-Jaap Kostelijk" version="3.0.0" wikilink="https://github.com/JanJaapKo/DysonPureLink/wiki" externallink="https://github.com/JanJaapKo/DysonPureLink">
     <description>
         <h2>Dyson Pure Link plugin</h2><br/>
         Connects to Dyson Pure Link devices.
@@ -190,9 +190,11 @@ class DysonPureLinkPlugin:
                    "LevelOffHidden" : "true",
                    "SelectorStyle" : "1"}
         if self.fanStateUnit not in Devices:
-            Domoticz.Device(Name='Fan state', Unit=self.fanStateUnit, TypeName="Selector Switch", Image=7, Options=Options).Create()
+            Domoticz.Device(Name='Fan state', Unit=self.fanStateUnit, Type=244, Subtype=62, Image=7, Switchtype=0).Create()
+            #Domoticz.Device(Name='Fan state', Unit=self.fanStateUnit, TypeName="Selector Switch", Image=7, Options=Options).Create()
         if self.heatStateUnit not in Devices:
-            Domoticz.Device(Name='Heating state', Unit=self.heatStateUnit, TypeName="Selector Switch", Image=7, Options=Options).Create()
+            Domoticz.Device(Name='Heating state', Unit=self.heatStateUnit, Type=244, Subtype=62, Image=7, Switchtype=0).Create()
+            #Domoticz.Device(Name='Heating state', Unit=self.heatStateUnit, TypeName="Selector Switch", Image=7, Options=Options).Create()
         if self.nightModeUnit not in Devices:
             Domoticz.Device(Name='Night mode', Unit=self.nightModeUnit, Type=244, Subtype=62,  Switchtype=0, Image=9).Create()
             
@@ -231,10 +233,11 @@ class DysonPureLinkPlugin:
             Domoticz.Device(Name='Dust (PM 10)', Unit=self.particles10Unit, TypeName="Air Quality").Create()
         Options = {"LevelActions" : "|||", "LevelNames" : "|OFF|ON", "LevelOffHidden" : "true", "SelectorStyle" : "1"}
         if self.fanModeAutoUnit not in Devices:
-            Domoticz.Device(Name='Fan mode auto', Unit=self.fanModeAutoUnit, TypeName="Selector Switch", Image=7, Options=Options).Create()
-        Options = {"LevelActions" : "|||", "LevelNames" : "|OFF|ON", "LevelOffHidden" : "true", "SelectorStyle" : "1"}
+            Domoticz.Device(Name='Fan mode auto', Unit=self.fanModeAutoUnit, Type=244, Subtype=62, Image=7, Switchtype=0).Create()
+            #Domoticz.Device(Name='Fan mode auto', Unit=self.fanModeAutoUnit, TypeName="Selector Switch", Image=7, Options=Options).Create()
         if self.fanFocusUnit not in Devices:
-            Domoticz.Device(Name='Fan focus mode', Unit=self.fanFocusUnit, Type=244, Subtype=62,Image=7, Switchtype=0).Create()
+            #Domoticz.Device(Name='Fan focus mode', Unit=self.fanFocusUnit, Type=244, Subtype=62,Image=7, Switchtype=0).Create()
+            Domoticz.Device(Name='Fan focus mode', Unit=self.fanFocusUnit, Type=244, Subtype=62, Image=7, Switchtype=0).Create()
         if self.nitrogenDioxideDensityUnit not in Devices:
             Domoticz.Device(Name='Nitrogen Dioxide Density (NOx)', Unit=self.nitrogenDioxideDensityUnit, TypeName="Air Quality").Create()
         if self.heatModeUnit not in Devices:
