@@ -78,6 +78,7 @@ from mqtt import MqttClient
 from dyson_pure_link_device import DysonPureLinkDevice
 from dyson import DysonAccount
 from value_types import SensorsData, StateData
+import device_library
 
 class DysonPureLinkPlugin:
     #define class variables
@@ -107,6 +108,7 @@ class DysonPureLinkPlugin:
     heatStateUnit = 20
     runCounter = 6
     pingCounter = 3
+    deviceLibrary = {}
 
     def __init__(self):
         self.myDevice = None
@@ -185,16 +187,10 @@ class DysonPureLinkPlugin:
                    "SelectorStyle" : "1"}
         if self.fanModeUnit not in Devices:
             Domoticz.Device(Name='Fan mode', Unit=self.fanModeUnit, TypeName="Selector Switch", Image=7, Options=Options).Create()
-        Options = {"LevelActions" : "||",
-                   "LevelNames" : "|OFF|ON",
-                   "LevelOffHidden" : "true",
-                   "SelectorStyle" : "1"}
         if self.fanStateUnit not in Devices:
             Domoticz.Device(Name='Fan state', Unit=self.fanStateUnit, Type=244, Subtype=62, Image=7, Switchtype=0).Create()
-            #Domoticz.Device(Name='Fan state', Unit=self.fanStateUnit, TypeName="Selector Switch", Image=7, Options=Options).Create()
         if self.heatStateUnit not in Devices:
             Domoticz.Device(Name='Heating state', Unit=self.heatStateUnit, Type=244, Subtype=62, Image=7, Switchtype=0).Create()
-            #Domoticz.Device(Name='Heating state', Unit=self.heatStateUnit, TypeName="Selector Switch", Image=7, Options=Options).Create()
         if self.nightModeUnit not in Devices:
             Domoticz.Device(Name='Night mode', Unit=self.nightModeUnit, Type=244, Subtype=62,  Switchtype=0, Image=9).Create()
             
@@ -231,12 +227,9 @@ class DysonPureLinkPlugin:
             Domoticz.Device(Name='Dust (PM 2,5)', Unit=self.particles2_5Unit, TypeName="Air Quality").Create()
         if self.particles10Unit not in Devices:
             Domoticz.Device(Name='Dust (PM 10)', Unit=self.particles10Unit, TypeName="Air Quality").Create()
-        Options = {"LevelActions" : "|||", "LevelNames" : "|OFF|ON", "LevelOffHidden" : "true", "SelectorStyle" : "1"}
         if self.fanModeAutoUnit not in Devices:
             Domoticz.Device(Name='Fan mode auto', Unit=self.fanModeAutoUnit, Type=244, Subtype=62, Image=7, Switchtype=0).Create()
-            #Domoticz.Device(Name='Fan mode auto', Unit=self.fanModeAutoUnit, TypeName="Selector Switch", Image=7, Options=Options).Create()
         if self.fanFocusUnit not in Devices:
-            #Domoticz.Device(Name='Fan focus mode', Unit=self.fanFocusUnit, Type=244, Subtype=62,Image=7, Switchtype=0).Create()
             Domoticz.Device(Name='Fan focus mode', Unit=self.fanFocusUnit, Type=244, Subtype=62, Image=7, Switchtype=0).Create()
         if self.nitrogenDioxideDensityUnit not in Devices:
             Domoticz.Device(Name='Nitrogen Dioxide Density (NOx)', Unit=self.nitrogenDioxideDensityUnit, TypeName="Air Quality").Create()
@@ -248,6 +241,8 @@ class DysonPureLinkPlugin:
             Domoticz.Device(Name='Heat mode', Unit=self.heatModeUnit, TypeName="Selector Switch", Image=7, Options=Options).Create()
         if self.heatTargetUnit not in Devices:
             Domoticz.Device(Name='Heat target', Unit=self.heatTargetUnit, Type=242, Subtype=1).Create()
+        if 25 not in Devices:
+            fanModeDevice = device_library.fanMode(25)
 
 
         Domoticz.Log("Device instance created: " + str(self.myDevice))
@@ -411,6 +406,15 @@ class DysonPureLinkPlugin:
                 Domoticz.Debug("machine state or state change recieved")
                 self.state_data = StateData(message)
                 self.updateDevices()
+                #new stuff
+                if message['msg'] == 'CURRENT-STATE':
+                    for state in message['product-state']:
+                        Domoticz.Debug("looping through received states: " + state)
+                        if state[0] in self.deviceLibrary:
+                            Domoticz.Debug("state[0] found: " + state[0])
+                            self.deviceLibrary[state[0]].update(state[1])
+                        else:
+                            self.deviceLibrary[state[0]] = ""
             if SensorsData.is_sensors_data(message):
                 Domoticz.Debug("sensor state recieved")
                 self.sensor_data = SensorsData(message)
