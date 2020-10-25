@@ -49,7 +49,7 @@ class DysonAccount:
         if self._logged:
             Domoticz.Debug("Fetching devices from Dyson Web Services.")
             device_response = requests.get(
-                "https://{0}/v1/provisioningservice/manifest".format(
+                "https://{0}/v2/provisioningservice/manifest".format(
                     DYSON_API_URL), verify=False, auth=self._auth, headers={'User-Agent': 'Mozilla/5.0'})
             devices_dict = {}
             Domoticz.Debug("Reply from Dyson: "+str(device_response.json())+"'")
