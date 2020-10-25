@@ -336,22 +336,30 @@ class DysonPureLinkPlugin:
     def updateDevices(self):
         """Update the defined devices from incoming mesage info"""
         #update the devices
-        UpdateDevice(self.fanOscillationUnit, self.state_data.oscillation.state, str(self.state_data.oscillation))
-        UpdateDevice(self.nightModeUnit, self.state_data.night_mode.state, str(self.state_data.night_mode))
+        if self.state_data.oscillation is not None:
+            UpdateDevice(self.fanOscillationUnit, self.state_data.oscillation.state, str(self.state_data.oscillation))
+        if self.state_data.night_mode is not None:
+            UpdateDevice(self.nightModeUnit, self.state_data.night_mode.state, str(self.state_data.night_mode))
 
         # Fan speed  
-        f_rate = self.state_data.fan_speed
-        if (f_rate == "AUTO"):
-            sValueNew = "110" # Auto
-        else:
-            sValueNew = str(int(f_rate) * 10)
+        if self.state_data.fan_speed is not None:
+            f_rate = self.state_data.fan_speed
+            if (f_rate == "AUTO"):
+                sValueNew = "110" # Auto
+            else:
+                sValueNew = str(int(f_rate) * 10)
+            UpdateDevice(self.fanSpeedUnit, 1, sValueNew)
 
-        UpdateDevice(self.fanSpeedUnit, 1, sValueNew)
-        UpdateDevice(self.fanModeUnit, self.state_data.fan_mode.state, str((self.state_data.fan_mode.state+1)*10))
-        UpdateDevice(self.fanStateUnit, self.state_data.fan_state.state, str((self.state_data.fan_state.state+1)*10))
-        UpdateDevice(self.filterLifeUnit, self.state_data.filter_life, str(self.state_data.filter_life))
-        UpdateDevice(self.qualityTargetUnit, self.state_data.quality_target.state, str((self.state_data.quality_target.state+1)*10))
-        UpdateDevice(self.standbyMonitoringUnit, self.state_data.standby_monitoring.state, str((self.state_data.standby_monitoring.state+1)*10))
+        if self.state_data.fan_mode is not None:
+            UpdateDevice(self.fanModeUnit, self.state_data.fan_mode.state, str((self.state_data.fan_mode.state+1)*10))
+        if self.state_data.fan_state is not None:
+            UpdateDevice(self.fanStateUnit, self.state_data.fan_state.state, str((self.state_data.fan_state.state+1)*10))
+        if self.state_data.filter_life is not None:
+            UpdateDevice(self.filterLifeUnit, self.state_data.filter_life, str(self.state_data.filter_life))
+        if self.state_data.quality_target is not None:
+            UpdateDevice(self.qualityTargetUnit, self.state_data.quality_target.state, str((self.state_data.quality_target.state+1)*10))
+        if self.state_data.standby_monitoring is not None:
+            UpdateDevice(self.standbyMonitoringUnit, self.state_data.standby_monitoring.state, str((self.state_data.standby_monitoring.state+1)*10))
         if self.state_data.fan_mode_auto is not None:
             UpdateDevice(self.fanModeAutoUnit, self.state_data.fan_mode_auto.state, str((self.state_data.fan_mode_auto.state+1)*10))
         if self.state_data.focus is not None:
@@ -392,7 +400,7 @@ class DysonPureLinkPlugin:
         """connection to device established"""
         Domoticz.Debug("onMQTTConnected called")
         Domoticz.Log("MQTT connection established")
-        self.mqttClient.Subscribe([self.base_topic + '/#']) #subscribe to all topics on the machine
+        self.mqttClient.Subscribe([self.base_topic + '/status/current', self.base_topic + '/status/connection', self.base_topic + '/status/faults']) #subscribe to all topics on the machine
         topic, payload = self.myDevice.request_state()
         self.mqttClient.Publish(topic, payload) #ask for update of current status
 
