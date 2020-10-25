@@ -53,6 +53,10 @@ class DysonDevice(commands.DysonCommands):
 
         :param json_body: JSON message returned by the HTTPS API
         """
+        if 'Active' in json_body:
+            self._active = json_body['Active']
+        else:
+            self._active = None
         self._name = json_body['Name'] #device name
         self._version = json_body['Version'] #sw version on device
         self._credentials = decrypt_password(json_body['LocalCredentials']) #registered password
