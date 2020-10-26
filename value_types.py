@@ -17,6 +17,9 @@ DISCONNECTION_STATE = {
     99: 'Disconnection error: timeout'
 }
 
+SENSOR_INIT_STATES = ['INIT', 'OFF']
+
+
 class FanMode():
     """Enum for fan mode"""
     OFF = 'OFF'
@@ -116,6 +119,8 @@ class SensorsData(object):
     particles = None
     particles2_5 = None
     particles10 = None
+    particulate_matter_25 = None
+    particulate_matter_10 = None
     nitrogenDioxideDensity = None
     heat_target = None
     
@@ -123,22 +128,28 @@ class SensorsData(object):
         data = message['data']
         humidity = data['hact']
         temperature = data['tact']
-        volatile_compounds = data['vact']
         sleep_timer = data['sltm']
 
-        if 'pact' in data:
-            self.particles = None if data['pact'] == 'INIT' or data['pact'] == 'OFF' else int(data['pact'])
-        self.humidity = None if humidity == 'OFF' else int(humidity)
-        self.temperature = None if temperature == 'OFF' else kelvin_to_celsius(float(temperature) / 10)
-        self.volatile_compounds = None if volatile_compounds == 'INIT' or volatile_compounds == 'OFF' else int(volatile_compounds)
-        self.sleep_timer = 0 if sleep_timer == 'OFF' else int(sleep_timer)
+        self.humidity = None if humidity in SENSOR_INIT_STATES else int(humidity)
+        self.temperature = None if temperature in SENSOR_INIT_STATES else kelvin_to_celsius(float(temperature) / 10)
+        self.sleep_timer = 0 if sleep_timer in SENSOR_INIT_STATES else int(sleep_timer)
 
+        if 'pact' in data:
+            self.particles = None if data['pact'] in SENSOR_INIT_STATES else int(data['pact'])
+        if 'vact' in data:
+            self.volatile_compounds = None if data['vact'] in SENSOR_INIT_STATES else int(data['vact'])
+        if 'va10' in data:
+            self.volatile_compounds = None if data['va10'] in SENSOR_INIT_STATES else int(data['va10'])
         if 'p25r' in data:
-            self.particles2_5 = int(data['p25r'])
+            self.particles2_5 = None if data['p25r'] in SENSOR_INIT_STATES else int(data['p25r'])
         if 'p10r' in data:
-            self.particles10 = int(data['p10r']) 
+            self.particles10 = None if data['p10r'] in SENSOR_INIT_STATES else int(data['p10r']) 
+        if 'pm25' in data:
+            self.particulate_matter_25 = None if data['pm25'] in SENSOR_INIT_STATES else int(data['pm25'])
+        if 'pm10' in data:
+            self.particulate_matter_10 = None if data['pm10'] in SENSOR_INIT_STATES else int(data['pm10']) 
         if 'noxl' in data:
-            self.nitrogenDioxideDensity = int(data['noxl'])
+            self.nitrogenDioxideDensity = None if data['noxl'] in SENSOR_INIT_STATES else int(data['noxl'])
 
     def __repr__(self):
         """Return a String representation"""
@@ -164,11 +175,16 @@ class StateData(object):
     fan_speed = None
     focus = None
     filter_life = None
+    quality_target = None
     error_code = None
     warning_code = None
     heat_mode = None
     heat_state = None
     heat_target = None
+    oscillation_status = None
+    night_mode_speed = None
+    oscillation_angle_low = None
+    oscillation_angle_high = None
 
     def __init__(self, message):
         data = message['product-state']
@@ -179,10 +195,14 @@ class StateData(object):
             self.fan_mode = FanMode(self._get_field_value(data['fpwr'])) # ON, OFF 
         if 'auto' in data:
             self.fan_mode_auto = FanMode(self._get_field_value(data['auto'])) # ON, OFF
-        self.fan_state = FanMode(self._get_field_value(data['fnst'])) # ON , OFF, (FAN?)
-        self.night_mode = FanMode(self._get_field_value(data['nmod'])) # ON , OFF
-        self.fan_speed = self._get_field_value(data['fnsp']) # 0001 - 0010, AUTO
-        self.oscillation = FanMode(self._get_field_value(data['oson'])) #ON , OFF
+        if 'fnst' in data:
+            self.fan_state = FanMode(self._get_field_value(data['fnst'])) # ON , OFF, (FAN?)
+        if 'nmod' in data:
+            self.night_mode = FanMode(self._get_field_value(data['nmod'])) # ON , OFF
+        if 'fnsp' in data:
+            self.fan_speed = self._get_field_value(data['fnsp']) # 0001 - 0010, AUTO
+        if 'oson' in data:
+            self.oscillation = FanMode(self._get_field_value(data['oson'])) #ON , OFF
         if 'fdir' in data:
             self.focus = FanMode(self._get_field_value(data['fdir'])) #ON , OFF
         if 'hflr' in data:
@@ -199,9 +219,17 @@ class StateData(object):
             self.heat_target = None if target == 'OFF' else int(kelvin_to_celsius(float(target) / 10))
         if 'hsta' in data:
             self.heat_state = HeatMode(self._get_field_value(data['hsta'])) #OFF, HEAT
+        if 'rhtm' in data:
+            self.standby_monitoring = FanMode(self._get_field_value(data['rhtm'])) # ON, OFF
+        if 'oscs' in data:
+            self.oscillation_status = FanMode(self._get_field_value(data['oscs'])) #ON , OFF
+        if 'nmdv' in data:
+            self.night_mode_speed = self._get_field_value(data['nmdv']) #0001 - 0010 ?
+        if 'osal' in data:
+            self.oscillation_angle_low = self._get_field_value(data['osal']) #0000 - 9999 ?
+        if 'osau' in data:
+            self.oscillation_angle_high = self._get_field_value(data['osau']) #0000 - 9999 ?
 
-
-        self.standby_monitoring = FanMode(self._get_field_value(data['rhtm'])) # ON, OFF
         self.error_code = self._get_field_value(data['ercd']) #I think this is an errorcode: NONE when filter needs replacement
         self.warning_code = self._get_field_value(data['wacd']) #I think this is Warning: FLTR when filter needs replacement
 
@@ -227,4 +255,4 @@ def kelvin_to_fahrenheit (kelvin_value):
     return kelvin_value * 9 / 5 - 459.67
 
 def kelvin_to_celsius (kelvin_value):
-    return kelvin_value - 272.15
+    return kelvin_value - 273.15

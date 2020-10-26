@@ -376,7 +376,7 @@ class DysonPureLinkPlugin:
     def updateSensors(self):
         """Update the defined devices from incoming mesage info"""
         #update the devices
-        if self.sensor_data.temperature is not None :
+        if self.sensor_data.temperature is not None and self.sensor_data.humidity is not None :
             tempNum = int(self.sensor_data.temperature)
             humNum = int(self.sensor_data.humidity)
             UpdateDevice(self.tempHumUnit, 1, str(self.sensor_data.temperature)[:4] +';'+ str(self.sensor_data.humidity) + ";1")
