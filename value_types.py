@@ -163,7 +163,7 @@ class SensorsData(object):
             particles = None
 
         return 'SensorsData: Temperature: {0} C, Humidity: {1} %, Volatile Compounds: {2}, Particles: {3}, sleep timer: {4}'.format(
-            self.temperature, self.humidity, volatile_compounds, particles, self.sleep_timer)
+            self.temperature, self.humidity, self.volatile_compounds, particles, self.sleep_timer)
 
     @property
     def has_data(self):
