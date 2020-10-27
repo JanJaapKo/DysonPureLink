@@ -153,8 +153,17 @@ class SensorsData(object):
 
     def __repr__(self):
         """Return a String representation"""
+        if self.particles is not None:
+            particles = self.particles
+        elif self.particles2_5 is not None:
+            particles = "PM 2,5: {0}, PM 10: {1}".format(self.particles2_5, self.particles10)
+        elif self.particulate_matter_25 is not None:
+            particles = "PM 25: {0}, PM 10: {1}".format(self.particulate_matter_25, self.particulate_matter_10)
+        else:
+            particles = None
+
         return 'SensorsData: Temperature: {0} C, Humidity: {1} %, Volatile Compounds: {2}, Particles: {3}, sleep timer: {4}'.format(
-            self.temperature, self.humidity, self.volatile_compounds, self.particles, self.sleep_timer)
+            self.temperature, self.humidity, volatile_compounds, particles, self.sleep_timer)
 
     @property
     def has_data(self):
