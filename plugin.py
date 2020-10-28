@@ -88,6 +88,7 @@ class DysonPureLinkPlugin:
     fanModeUnit = 1
     nightModeUnit = 2
     fanSpeedUnit = 3
+    fanSpeedUnitV2 = 23
     fanOscillationUnit = 4
     standbyMonitoringUnit = 5
     filterLifeUnit = 6
@@ -202,6 +203,12 @@ class DysonPureLinkPlugin:
                    "SelectorStyle" : "1"}
         if self.fanSpeedUnit not in Devices:
             Domoticz.Device(Name='Fan speed', Unit=self.fanSpeedUnit, TypeName="Selector Switch", Image=7, Options=Options).Create()
+        Options = {"LevelActions" : "|||||||||||",
+            "LevelNames" : "1|2|3|4|5|6|7|8|9|10|AUTO",
+            "LevelOffHidden" : "false",
+            "SelectorStyle" : "1"}
+        if self.fanSpeedUnitV2 not in Devices:
+            Domoticz.Device(Name='Fan speed', Unit=self.fanSpeedUnitV2, TypeName="Selector Switch", Image=7, Options=Options).Create()
 
         if self.fanOscillationUnit not in Devices:
             Domoticz.Device(Name='Oscilation mode', Unit=self.fanOscillationUnit, Type=244, Subtype=62, Image=7, Switchtype=0).Create()
@@ -267,6 +274,12 @@ class DysonPureLinkPlugin:
         
         if Unit == self.qualityTargetUnit and Level<=100:
             topic, payload = self.myDevice.set_quality_target(Level)
+        if Unit == self.fanSpeedUnitV2:
+            if Level<=90:
+                arg="0000"+str(1+Level//10)
+                topic, payload = self.myDevice.set_fan_speed(arg[-4:]) #use last 4 characters as speed level or AUTO
+            else:
+                topic, payload = self.myDevice.set_fan_mode_auto("ON") #use last 4 characters as speed level or AUTO
         if Unit == self.fanSpeedUnit and Level<=100:
             arg="0000"+str(Level//10)
             topic, payload = self.myDevice.set_fan_speed(arg[-4:]) #use last 4 characters as speed level or AUTO
@@ -348,7 +361,18 @@ class DysonPureLinkPlugin:
             else:
                 sValueNew = str(int(f_rate) * 10)
             UpdateDevice(self.fanSpeedUnit, 1, sValueNew)
-
+        if self.state_data.fan_speed is not None:
+            # Fan speed  
+            f_rate = self.state_data.fan_speed
+    
+            if (f_rate == "AUTO"):
+                nValueNew = 100
+                sValueNew = "100" # Auto
+            else:
+                nValueNew = (int(f_rate)-1)*10
+                sValueNew = str((int(f_rate)-1) * 10)
+            UpdateDevice(self.fanSpeedUnitV2, nValueNew, sValueNew)
+        
         if self.state_data.fan_mode is not None:
             UpdateDevice(self.fanModeUnit, self.state_data.fan_mode.state, str((self.state_data.fan_mode.state+1)*10))
         if self.state_data.fan_state is not None:
