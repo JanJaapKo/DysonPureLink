@@ -199,7 +199,7 @@ class DysonPureLinkPlugin:
             
         Options = {"LevelActions" : "|||||||||||",
                    "LevelNames" : "|1|2|3|4|5|6|7|8|9|10|Auto",
-                   "LevelOffHidden" : "false",
+                   "LevelOffHidden" : "true",
                    "SelectorStyle" : "1"}
         if self.fanSpeedUnit not in Devices:
             Domoticz.Device(Name='Fan speed', Unit=self.fanSpeedUnit, TypeName="Selector Switch", Image=7, Options=Options).Create()
