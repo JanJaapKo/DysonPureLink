@@ -17,7 +17,7 @@ DISCONNECTION_STATE = {
     99: 'Disconnection error: timeout'
 }
 
-SENSOR_INIT_STATES = ['INIT', 'OFF']
+SENSOR_INIT_STATES = ['INIT', 'OFF', 'INV']
 
 
 class FanMode():
