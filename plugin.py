@@ -88,6 +88,7 @@ class DysonPureLinkPlugin:
     fanModeUnit = 1
     nightModeUnit = 2
     fanSpeedUnit = 3
+    fanSpeedUnitV2 = 23
     fanOscillationUnit = 4
     standbyMonitoringUnit = 5
     filterLifeUnit = 6
@@ -105,6 +106,10 @@ class DysonPureLinkPlugin:
     heatModeUnit = 18
     heatTargetUnit = 19
     heatStateUnit = 20
+    particlesMatter25Unit = 21
+    particlesMatter10Unit = 22
+
+
     runCounter = 6
     pingCounter = 3
 
@@ -185,25 +190,25 @@ class DysonPureLinkPlugin:
                    "SelectorStyle" : "1"}
         if self.fanModeUnit not in Devices:
             Domoticz.Device(Name='Fan mode', Unit=self.fanModeUnit, TypeName="Selector Switch", Image=7, Options=Options).Create()
-        Options = {"LevelActions" : "||",
-                   "LevelNames" : "|OFF|ON",
-                   "LevelOffHidden" : "true",
-                   "SelectorStyle" : "1"}
         if self.fanStateUnit not in Devices:
             Domoticz.Device(Name='Fan state', Unit=self.fanStateUnit, Type=244, Subtype=62, Image=7, Switchtype=0).Create()
-            #Domoticz.Device(Name='Fan state', Unit=self.fanStateUnit, TypeName="Selector Switch", Image=7, Options=Options).Create()
         if self.heatStateUnit not in Devices:
             Domoticz.Device(Name='Heating state', Unit=self.heatStateUnit, Type=244, Subtype=62, Image=7, Switchtype=0).Create()
-            #Domoticz.Device(Name='Heating state', Unit=self.heatStateUnit, TypeName="Selector Switch", Image=7, Options=Options).Create()
         if self.nightModeUnit not in Devices:
             Domoticz.Device(Name='Night mode', Unit=self.nightModeUnit, Type=244, Subtype=62,  Switchtype=0, Image=9).Create()
             
         Options = {"LevelActions" : "|||||||||||",
                    "LevelNames" : "|1|2|3|4|5|6|7|8|9|10|Auto",
-                   "LevelOffHidden" : "false",
+                   "LevelOffHidden" : "true",
                    "SelectorStyle" : "1"}
         if self.fanSpeedUnit not in Devices:
             Domoticz.Device(Name='Fan speed', Unit=self.fanSpeedUnit, TypeName="Selector Switch", Image=7, Options=Options).Create()
+        Options = {"LevelActions" : "|||||||||||",
+            "LevelNames" : "1|2|3|4|5|6|7|8|9|10|AUTO",
+            "LevelOffHidden" : "false",
+            "SelectorStyle" : "1"}
+        if self.fanSpeedUnitV2 not in Devices:
+            Domoticz.Device(Name='Fan speed', Unit=self.fanSpeedUnitV2, TypeName="Selector Switch", Image=7, Options=Options).Create()
 
         if self.fanOscillationUnit not in Devices:
             Domoticz.Device(Name='Oscilation mode', Unit=self.fanOscillationUnit, Type=244, Subtype=62, Image=7, Switchtype=0).Create()
@@ -231,12 +236,13 @@ class DysonPureLinkPlugin:
             Domoticz.Device(Name='Dust (PM 2,5)', Unit=self.particles2_5Unit, TypeName="Air Quality").Create()
         if self.particles10Unit not in Devices:
             Domoticz.Device(Name='Dust (PM 10)', Unit=self.particles10Unit, TypeName="Air Quality").Create()
-        Options = {"LevelActions" : "|||", "LevelNames" : "|OFF|ON", "LevelOffHidden" : "true", "SelectorStyle" : "1"}
+        if self.particlesMatter25Unit not in Devices:
+            Domoticz.Device(Name='Particles (PM 25)', Unit=self.particlesMatter25Unit, TypeName="Air Quality").Create()
+        if self.particlesMatter10Unit not in Devices:
+            Domoticz.Device(Name='Particles (PM 10)', Unit=self.particlesMatter10Unit, TypeName="Air Quality").Create()
         if self.fanModeAutoUnit not in Devices:
             Domoticz.Device(Name='Fan mode auto', Unit=self.fanModeAutoUnit, Type=244, Subtype=62, Image=7, Switchtype=0).Create()
-            #Domoticz.Device(Name='Fan mode auto', Unit=self.fanModeAutoUnit, TypeName="Selector Switch", Image=7, Options=Options).Create()
         if self.fanFocusUnit not in Devices:
-            #Domoticz.Device(Name='Fan focus mode', Unit=self.fanFocusUnit, Type=244, Subtype=62,Image=7, Switchtype=0).Create()
             Domoticz.Device(Name='Fan focus mode', Unit=self.fanFocusUnit, Type=244, Subtype=62, Image=7, Switchtype=0).Create()
         if self.nitrogenDioxideDensityUnit not in Devices:
             Domoticz.Device(Name='Nitrogen Dioxide Density (NOx)', Unit=self.nitrogenDioxideDensityUnit, TypeName="Air Quality").Create()
@@ -268,6 +274,12 @@ class DysonPureLinkPlugin:
         
         if Unit == self.qualityTargetUnit and Level<=100:
             topic, payload = self.myDevice.set_quality_target(Level)
+        if Unit == self.fanSpeedUnitV2:
+            if Level<=90:
+                arg="0000"+str(1+Level//10)
+                topic, payload = self.myDevice.set_fan_speed(arg[-4:]) #use last 4 characters as speed level or AUTO
+            else:
+                topic, payload = self.myDevice.set_fan_mode_auto("ON") #use last 4 characters as speed level or AUTO
         if Unit == self.fanSpeedUnit and Level<=100:
             arg="0000"+str(Level//10)
             topic, payload = self.myDevice.set_fan_speed(arg[-4:]) #use last 4 characters as speed level or AUTO
@@ -349,7 +361,18 @@ class DysonPureLinkPlugin:
             else:
                 sValueNew = str(int(f_rate) * 10)
             UpdateDevice(self.fanSpeedUnit, 1, sValueNew)
-
+        if self.state_data.fan_speed is not None:
+            # Fan speed  
+            f_rate = self.state_data.fan_speed
+    
+            if (f_rate == "AUTO"):
+                nValueNew = 100
+                sValueNew = "100" # Auto
+            else:
+                nValueNew = (int(f_rate)-1)*10
+                sValueNew = str((int(f_rate)-1) * 10)
+            UpdateDevice(self.fanSpeedUnitV2, nValueNew, sValueNew)
+        
         if self.state_data.fan_mode is not None:
             UpdateDevice(self.fanModeUnit, self.state_data.fan_mode.state, str((self.state_data.fan_mode.state+1)*10))
         if self.state_data.fan_state is not None:
@@ -367,16 +390,16 @@ class DysonPureLinkPlugin:
         if self.state_data.heat_mode is not None:
             UpdateDevice(self.heatModeUnit, self.state_data.heat_mode.state, str((self.state_data.heat_mode.state+1)*10))
         if self.state_data.heat_target is not None:
-            #UpdateDevice(self.heatTargetUnit, int(self.state_data.heat_target), str(self.state_data.heat_target))
             UpdateDevice(self.heatTargetUnit, 0, str(self.state_data.heat_target))
         if self.state_data.heat_state is not None:
             UpdateDevice(self.heatStateUnit, self.state_data.heat_state.state, str((self.state_data.heat_state.state+1)*10))
+        Domoticz.Debug("update StateData: " + str(self.state_data))
 
 
     def updateSensors(self):
         """Update the defined devices from incoming mesage info"""
         #update the devices
-        if self.sensor_data.temperature is not None :
+        if self.sensor_data.temperature is not None and self.sensor_data.humidity is not None :
             tempNum = int(self.sensor_data.temperature)
             humNum = int(self.sensor_data.humidity)
             UpdateDevice(self.tempHumUnit, 1, str(self.sensor_data.temperature)[:4] +';'+ str(self.sensor_data.humidity) + ";1")
@@ -388,13 +411,17 @@ class DysonPureLinkPlugin:
             UpdateDevice(self.particles2_5Unit, self.sensor_data.particles2_5, str(self.sensor_data.particles2_5))
         if self.sensor_data.particles10 is not None:
             UpdateDevice(self.particles10Unit, self.sensor_data.particles10, str(self.sensor_data.particles10))
+        if self.sensor_data.particulate_matter_25 is not None:
+            UpdateDevice(self.particlesMatter25Unit, self.sensor_data.particulate_matter_25, str(self.sensor_data.particulate_matter_25))
+        if self.sensor_data.particulate_matter_10 is not None:
+            UpdateDevice(self.particlesMatter10Unit, self.sensor_data.particulate_matter_10, str(self.sensor_data.particulate_matter_10))
         if self.sensor_data.nitrogenDioxideDensity is not None:
             UpdateDevice(self.nitrogenDioxideDensityUnit, self.sensor_data.nitrogenDioxideDensity, str(self.sensor_data.nitrogenDioxideDensity))
         if self.sensor_data.heat_target is not None:
             UpdateDevice(self.heatTargetUnit, self.sensor_data.heat_target, str(self.sensor_data.heat_target))
         UpdateDevice(self.sleepTimeUnit, self.sensor_data.sleep_timer, str(self.sensor_data.sleep_timer))
         Domoticz.Debug("update SensorData: " + str(self.sensor_data))
-        Domoticz.Debug("update StateData: " + str(self.state_data))
+        #Domoticz.Debug("update StateData: " + str(self.state_data))
 
     def onMQTTConnected(self):
         """connection to device established"""
