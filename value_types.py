@@ -215,7 +215,7 @@ class StateData(object):
         if 'fdir' in data:
             self.focus = FanMode(self._get_field_value(data['fdir'])) #ON , OFF
         if 'hflr' in data:
-            self.filter_life = None if data['hflr'] in SENSOR_INIT_STATES or data['cflr'] in SENSOR_INIT_STATES else int((int(self._get_field_value(data['hflr'])) + int(self._get_field_value(data['cflr']))) / 2) # // With TP04 models average cflr and hflr
+            self.filter_life = None if self._get_field_value(data['hflr']) in SENSOR_INIT_STATES or self._get_field_value(data['cflr']) in SENSOR_INIT_STATES else int((int(self._get_field_value(data['hflr'])) + int(self._get_field_value(data['cflr']))) / 2) # // With TP04 models average cflr and hflr
         if 'filf' in data:
             self.filter_life = int(self._get_field_value(data['filf'])) #0000 - 4300
         if 'qtar' in data:
