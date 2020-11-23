@@ -3,7 +3,7 @@
 # Author: Jan-Jaap Kostelijk
 #
 """
-<plugin key="DysonPureLink" name="Dyson Pure Link" author="Jan-Jaap Kostelijk" version="3.0.3" wikilink="https://github.com/JanJaapKo/DysonPureLink/wiki" externallink="https://github.com/JanJaapKo/DysonPureLink">
+<plugin key="DysonPureLink" name="Dyson Pure Link" author="Jan-Jaap Kostelijk" version="3.0.4" wikilink="https://github.com/JanJaapKo/DysonPureLink/wiki" externallink="https://github.com/JanJaapKo/DysonPureLink">
     <description>
         <h2>Dyson Pure Link plugin</h2><br/>
         Connects to Dyson Pure Link devices.
@@ -204,7 +204,7 @@ class DysonPureLinkPlugin:
         if self.fanSpeedUnit not in Devices:
             Domoticz.Device(Name='Fan speed', Unit=self.fanSpeedUnit, TypeName="Selector Switch", Image=7, Options=Options).Create()
         Options = {"LevelActions" : "|||||||||||",
-            "LevelNames" : "1|2|3|4|5|6|7|8|9|10|AUTO",
+            "LevelNames" : "OFF|1|2|3|4|5|6|7|8|9|10|AUTO",
             "LevelOffHidden" : "false",
             "SelectorStyle" : "1"}
         if self.fanSpeedUnitV2 not in Devices:
@@ -275,24 +275,24 @@ class DysonPureLinkPlugin:
         
         if Unit == self.qualityTargetUnit and Level<=100:
             topic, payload = self.myDevice.set_quality_target(Level)
-        if Unit == self.fanSpeedUnitV2:
-            if Level<=90:
-                arg="0000"+str(1+Level//10)
+        if Unit == self.fanSpeedUnitV2 and Level<=100:
+            if Level>0:
+                arg="0000"+str(Level//10)
                 topic, payload = self.myDevice.set_fan_speed(arg[-4:]) #use last 4 characters as speed level or AUTO
             else:
-                topic, payload = self.myDevice.set_fan_mode_auto("ON") #use last 4 characters as speed level or AUTO
+                topic, payload = self.myDevice.set_fan_mode("OFF") #use last 4 characters as speed level or AUTO
         if Unit == self.fanSpeedUnit and Level<=100:
             arg="0000"+str(Level//10)
             topic, payload = self.myDevice.set_fan_speed(arg[-4:]) #use last 4 characters as speed level or AUTO
-        if Unit == self.fanModeUnit or (Unit == self.fanSpeedUnit and Level>100):
+            if Level == 0:
+                 topic, payload = self.myDevice.set_fan_mode("OFF")
+        if Unit == self.fanModeUnit or ((Unit == self.fanSpeedUnit or Unit == self.fanSpeedUnitV2) and Level>100):
             if Level == 10: arg="OFF"
             if Level == 20: arg="FAN"
             if Level >=30: arg="AUTO"
             topic, payload = self.myDevice.set_fan_mode(arg) 
         if Unit == self.fanStateUnit:
-            if Level == 10: arg="OFF"
-            if Level == 20: arg="ON"
-            topic, payload = self.myDevice.set_fan_state(arg) 
+            Domoticz.Log("Unit Fans State is read only, no command sent")
         if Unit == self.fanOscillationUnit:
             topic, payload = self.myDevice.set_oscilation(str(Command).upper()) 
         if Unit == self.fanFocusUnit:
@@ -367,11 +367,17 @@ class DysonPureLinkPlugin:
             f_rate = self.state_data.fan_speed
     
             if (f_rate == "AUTO"):
-                nValueNew = 100
-                sValueNew = "100" # Auto
+                nValueNew = 110
+                sValueNew = "110" # Auto
             else:
-                nValueNew = (int(f_rate)-1)*10
-                sValueNew = str((int(f_rate)-1) * 10)
+                nValueNew = (int(f_rate))*10
+                sValueNew = str((int(f_rate)) * 10)
+            if self.state_data.fan_mode is not None:
+                Domoticz.Debug("update fanspeed, state of FanMode: " + str(self.state_data.fan_mode))
+                if self.state_data.fan_mode.state == 0:
+                    nValueNew = 0
+                    sValueNew = "0"
+                    
             UpdateDevice(self.fanSpeedUnitV2, nValueNew, sValueNew)
         
         if self.state_data.fan_mode is not None:

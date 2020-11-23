@@ -52,11 +52,6 @@ class DysonCommands(object):
         command = self._create_command({'fmod': mode})
         return(self.device_command, command);
 
-    def set_fan_state(self, state):
-        """Changes fan mode: ON|OFF|AUTO"""
-        command = self._create_command({'fnst': state})
-        return(self.device_command, command);
-
     def set_fan_speed(self, speed):
         """Changes fan speed: 0001..0010|AUTO"""
         command = self._create_command({'fnsp': speed})
