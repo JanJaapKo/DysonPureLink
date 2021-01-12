@@ -278,10 +278,17 @@ class DysonPureLinkPlugin:
             else:
                 topic, payload = self.myDevice.set_fan_mode("OFF") #use last 4 characters as speed level or AUTO
         if Unit == self.fanModeUnit or (Unit == self.fanSpeedUnit and Level>100):
-            if Level == 10: arg="OFF"
-            if Level == 20: arg="FAN"
-            if Level >=30: arg="AUTO"
-            topic, payload = self.myDevice.set_fan_mode(arg) 
+            if self.myDevice.product_type == '438':
+                if Level >=30: 
+                    arg="ON"
+                else:
+                    arg='OFF'
+                topic, payload = self.myDevice.set_fan_mode_auto(arg) 
+            else:
+                if Level == 10: arg="OFF"
+                if Level == 20: arg="FAN"
+                if Level >=30: arg="AUTO"
+                topic, payload = self.myDevice.set_fan_mode(arg) 
         if Unit == self.fanStateUnit:
             Domoticz.Log("Unit Fans State is read only, no command sent")
         if Unit == self.fanOscillationUnit:
