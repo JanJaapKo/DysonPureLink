@@ -82,6 +82,12 @@ class DysonCommands(object):
         command = self._create_command({'auto': mode})
         return(self.device_command, command);
 
+    def set_fan_power(self, mode):
+        """Changes power mode: ON|OFF"""
+        #this command is to be determined to be ok
+        command = self._create_command({'fpwr': mode})
+        return(self.device_command, command);
+
     def set_heat_mode(self, mode):
         """Changes heating mode: HEAT|OFF"""
         command = self._create_command({'hmod': mode})
