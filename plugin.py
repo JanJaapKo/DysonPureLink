@@ -265,6 +265,7 @@ class DysonPureLinkPlugin:
         topic = ''
         payload = ''
         arg = '' 
+        fan_pwr_list = ['438','527'] 
         
         if Unit == self.qualityTargetUnit and Level<=100:
             topic, payload = self.myDevice.set_quality_target(Level)
@@ -274,17 +275,17 @@ class DysonPureLinkPlugin:
             self.mqttClient.Publish(topic, payload)
             if Level>0:
                 #when setting a speed value, make sure that the fan is actually on
-                if self.myDevice.product_type == '438':
+                if self.myDevice.product_type in fan_pwr_list:
                     topic, payload = self.myDevice.set_fan_power("ON") 
                 else:
                     topic, payload = self.myDevice.set_fan_mode("FAN") 
             else:
-                if self.myDevice.product_type == '438':
+                if self.myDevice.product_type in fan_pwr_list:
                     topic, payload = self.myDevice.set_fan_power("OFF") 
                 else:
                     topic, payload = self.myDevice.set_fan_mode("OFF") #use last 4 characters as speed level or AUTO
         if Unit == self.fanModeUnit or (Unit == self.fanSpeedUnit and Level>100):
-            if self.myDevice.product_type == '438':
+            if self.myDevice.product_type in fan_pwr_list:
                 if Level >= 30: 
                     arg="ON"
                     #Switch to Auto
