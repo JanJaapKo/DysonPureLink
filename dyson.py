@@ -3,6 +3,7 @@
 import Domoticz
 import requests
 from dyson_device import DysonDevice
+from requests.auth import HTTPBasicAuth
 
 DYSON_API_URL = "appapi.cp.dyson.com"
 DYSON_API_URL_CN = "appapi.cp.dyson.cn"
@@ -31,26 +32,50 @@ class DysonAccount:
 
     def login(self):
         """Login to dyson web services."""
+        # Must first check account status
+        uri = "https://{0}/v1/userregistration/userstatus".format(self._dyson_api_url)
+        Domoticz.Debug("Request URL: '" + uri + "'")
+        accountstatus = requests.get(
+            uri,
+            params={"country": self._country, "email": self._email},
+            headers=self._headers,
+            verify=False,
+        )
+
+        if accountstatus.status_code == requests.codes.ok:
+            json_status = accountstatus.json()
+            if json_status['accountStatus'] != "ACTIVE":
+                # The account is not active
+                Domoticz.Error("Login to Dyson account failed: not active")
+                self._logged = False
+                return self._logged
+        else:
+            self._logged = False
+            return self._logged
+
         request_body = {
             "Email": self._email,
             "Password": self._password
         }
+        
         uri = "https://{0}/v1/userregistration/authenticate?country={1}".format(self._dyson_api_url, self._country)
         Domoticz.Debug("Request URL: '" + uri + "'")
         login = requests.post(
             uri,
             headers=self._headers,
-            data=request_body,
+            json=request_body,
             verify=False
         )
+        
         if login.status_code == requests.codes.ok:
             json_response = login.json()
             Domoticz.Debug("Login OK, JSON response: '"+str(json_response)+"'")
-            self._auth = (json_response["Account"], json_response["Password"])
+            self._auth = HTTPBasicAuth(json_response["Account"], json_response["Password"])
             self._logged = True
         else:
             self._logged = False
             Domoticz.Error("Login to Dyson account failed: '" +str(login.status_code)+", " +str(login.reason)+"'")
+            Domoticz.Debug("Login to Dyson account failed, returned info: " + str(login.json()))
         return self._logged
 
     def devices(self):
