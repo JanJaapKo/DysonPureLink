@@ -31,6 +31,9 @@ git pull https://github.com/JanJaapKo/DysonPureLink
 ## Configuration
 See the [Wiki](https://github.com/JanJaapKo/DysonPureLink/wiki) page for configuration information.
 
+## Known issues
+- Dyson is regularly updating its cloud API leading to the following error on restart of the plugin/Domoticz: ``` Login to Dyson account failed: '401, Unauthorized' ```. According to [etheralm/issue37] (https://github.com/etheralm/libpurecool/issues/37) the solution for now (March 2021) is to log in with the Dyson mobile app first
+
 ## Credits
 
 based on info from the following sources:
