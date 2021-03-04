@@ -91,6 +91,8 @@ from value_types import SensorsData, StateData
 
 class DysonPureLinkPlugin:
     #define class variables
+    #plugin version
+    version = "3.1.2"
     enabled = False
     mqttClient = None
     #unit numbers for devices to create
@@ -132,16 +134,18 @@ class DysonPureLinkPlugin:
         self.mqttClient = None
 
     def onStart(self):
-        Domoticz.Log("onStart called")
+        Domoticz.Debug("onStart called")
         if Parameters['Mode4'] == 'Debug':
             Domoticz.Debugging(2)
             DumpConfigToLog()
         if Parameters['Mode4'] == 'Verbose':
             Domoticz.Debugging(1+2+4+8+16+64)
             DumpConfigToLog()
-        
+                
         #PureLink needs polling, get from config
         Domoticz.Heartbeat(10)
+        
+        self.checkVersion(self.version)
         
         #read out parameters for local connection
         self.ip_address = Parameters["Address"].strip()
@@ -155,6 +159,9 @@ class DysonPureLinkPlugin:
         Domoticz.Debug("=== start making connection to Dyson account ===")
         dysonAccount = DysonAccount(Parameters['Mode5'], Parameters['Mode3'], "NL")
         dysonAccount.login()
+        #Domoticz.Log("credentials '" + str(dysonAccount.credentials) + "'")
+        if dysonAccount.logged:
+            self._storeCredentials(dysonAccount.credentials)
         #deviceList = ()
         deviceList = []
         deviceList = dysonAccount.devices()
@@ -486,12 +493,75 @@ class DysonPureLinkPlugin:
             #connection status received
             Domoticz.Debug("summary state recieved")
 
+    def checkVersion(self, version):
+        """checks actual version against stored version as 'Ma.Mi.Pa' and checks if updates needed"""
+        #read version from stored configuration
+        ConfVersion = getConfigItem("plugin version", "0.0.0")
+        Domoticz.Log("Starting version: " + version )
+        MaCurrent,MiCurrent,PaCurrent = version.split('.')
+        MaConf,MiConf,PaConf = ConfVersion.split('.')
+        Domoticz.Debug("checking versions: current '{0}', config '{1}'".format(version, ConfVersion))
+        if int(MaConf) < int(MaCurrent):
+            Domoticz.Log("Major version upgrade: {0} -> {1}".format(MaConf,MaCurrent))
+            #add code to perform MAJOR upgrades
+        elif int(MiConf) < int(MiCurrent):
+            Domoticz.Log("Minor version upgrade: {0} -> {1}".format(MiConf,MiCurrent))
+            #add code to perform MINOR upgrades
+        elif int(PaConf) < int(PaCurrent):
+            Domoticz.Log("Patch version upgrade: {0} -> {1}".format(PaConf,PaCurrent))
+            #add code to perform PATCH upgrades, if any
+        if ConfVersion != version:
+            #store new version info
+            self._setVersion(MaCurrent,MiCurrent,PaCurrent)
+            
     def _hashed_password(self, pwd):
         """Hash password (found in manual) to a base64 encoded of its sha512 value"""
         hash = hashlib.sha512()
         hash.update(pwd.encode('utf-8'))
         return base64.b64encode(hash.digest()).decode('utf-8')
 
+    def _setVersion(self, major, minor, patch):
+        #set configs
+        Domoticz.Debug("Setting version to {0}.{1}.{2}".format(major, minor, patch))
+        setConfigItem(Key="MajorVersion", Value=major)
+        setConfigItem(Key="MinorVersion", Value=minor)
+        setConfigItem(Key="patchVersion", Value=patch)
+        setConfigItem(Key="plugin version", Value="{0}.{1}.{2}".format(major, minor, patch))
+        
+    def _storeCredentials(self, creds):
+        #store credentials as config item
+        #json_response["Account"], json_response["Password"]
+        Domoticz.Debug("Storing credentials: first credential: " + str(creds.keys()[0]) + " second credential: " + str(creds.keys()[1]))
+        setConfigItem(Key = "credentials", Value = creds)
+
+# Configuration Helpers
+def getConfigItem(Key=None, Default={}):
+   Value = Default
+   try:
+       Config = Domoticz.Configuration()
+       if (Key != None):
+           Value = Config[Key] # only return requested key if there was one
+       else:
+           Value = Config      # return the whole configuration if no key
+   except KeyError:
+       Value = Default
+   except Exception as inst:
+       Domoticz.Error("Domoticz.Configuration read failed: '"+str(inst)+"'")
+   return Value
+   
+def setConfigItem(Key=None, Value=None):
+   Config = {}
+   try:
+       Config = Domoticz.Configuration()
+       if (Key != None):
+           Config[Key] = Value
+       else:
+           Config = Value  # set whole configuration if no key specified
+       Config = Domoticz.Configuration(Config)
+   except Exception as inst:
+       Domoticz.Error("Domoticz.Configuration operation failed: '"+str(inst)+"'")
+   return Config
+       
 def UpdateDevice(Unit, nValue, sValue, BatteryLevel=255, AlwaysUpdate=False):
     if Unit not in Devices: return
     if Devices[Unit].nValue != nValue\
@@ -553,12 +623,12 @@ def DumpConfigToLog():
     for x in Parameters:
         if Parameters[x] != "":
             Domoticz.Debug( "Parameter '" + x + "':'" + str(Parameters[x]) + "'")
+    Configurations = getConfigItem()
+    Domoticz.Debug("Configuration count: " + str(len(Configurations)))
+    for x in Configurations:
+        if Configurations[x] != "":
+            Domoticz.Debug( "Configuration '" + x + "':'" + str(Configurations[x]) + "'")
     Domoticz.Debug("Device count: " + str(len(Devices)))
     for x in Devices:
         Domoticz.Debug("Device:           " + str(x) + " - " + str(Devices[x]))
-        Domoticz.Debug("Device ID:       '" + str(Devices[x].ID) + "'")
-        Domoticz.Debug("Device Name:     '" + Devices[x].Name + "'")
-        Domoticz.Debug("Device nValue:    " + str(Devices[x].nValue))
-        Domoticz.Debug("Device sValue:   '" + Devices[x].sValue + "'")
-        Domoticz.Debug("Device LastLevel: " + str(Devices[x].LastLevel))
     return

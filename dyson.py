@@ -24,6 +24,7 @@ class DysonAccount:
         self._country = country
         self._logged = False
         self._auth = None
+        self._credentials = None
         self._headers = {'User-Agent': DYSON_API_USER_AGENT}
         if country == "CN":
             self._dyson_api_url = DYSON_API_URL_CN
@@ -50,6 +51,7 @@ class DysonAccount:
                 self._logged = False
                 return self._logged
         else:
+            Domoticz.Error("Login to Dyson account/userStatus failed: '" +str(accountstatus.status_code)+", " +str(accountstatus.reason)+"'")
             self._logged = False
             return self._logged
 
@@ -70,12 +72,13 @@ class DysonAccount:
         if login.status_code == requests.codes.ok:
             json_response = login.json()
             Domoticz.Debug("Login OK, JSON response: '"+str(json_response)+"'")
+            self._credentials = json_response
             self._auth = HTTPBasicAuth(json_response["Account"], json_response["Password"])
             self._logged = True
         else:
             self._logged = False
-            Domoticz.Error("Login to Dyson account failed: '" +str(login.status_code)+", " +str(login.reason)+"'")
-            Domoticz.Debug("Login to Dyson account failed, returned info: " + str(login.json()))
+            Domoticz.Error("Login to Dyson account/authenticate failed: '" +str(login.status_code)+", " +str(login.reason)+"'")
+            Domoticz.Debug("Login to Dyson account/authenticate failed, returned info: " + str(login.json()))
         return self._logged
 
     def devices(self):
@@ -115,3 +118,13 @@ class DysonAccount:
     def logged(self):
         """Return True if user is logged, else False."""
         return self._logged
+
+    @property
+    def credentials(self):
+        """Return device credentials as JSON string"""
+        return self._credentials
+
+    @property
+    def authentication(self):
+        """Return authentication object"""
+        return self._auth
