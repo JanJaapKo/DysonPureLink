@@ -134,7 +134,7 @@ class DysonPureLinkPlugin:
         self.mqttClient = None
 
     def onStart(self):
-        Domoticz.Log("onStart called")
+        Domoticz.Debug("onStart called")
         if Parameters['Mode4'] == 'Debug':
             Domoticz.Debugging(2)
             DumpConfigToLog()
@@ -159,6 +159,9 @@ class DysonPureLinkPlugin:
         Domoticz.Debug("=== start making connection to Dyson account ===")
         dysonAccount = DysonAccount(Parameters['Mode5'], Parameters['Mode3'], "NL")
         dysonAccount.login()
+        #Domoticz.Log("credentials '" + str(dysonAccount.credentials) + "'")
+        if dysonAccount.logged:
+            self._storeCredentials(dysonAccount.credentials)
         #deviceList = ()
         deviceList = []
         deviceList = dysonAccount.devices()
@@ -494,6 +497,7 @@ class DysonPureLinkPlugin:
         """checks actual version against stored version as 'Ma.Mi.Pa' and checks if updates needed"""
         #read version from stored configuration
         ConfVersion = getConfigItem("plugin version", "0.0.0")
+        Domoticz.Log("Starting version: " + version )
         MaCurrent,MiCurrent,PaCurrent = version.split('.')
         MaConf,MiConf,PaConf = ConfVersion.split('.')
         Domoticz.Debug("checking versions: current '{0}', config '{1}'".format(version, ConfVersion))
@@ -523,6 +527,12 @@ class DysonPureLinkPlugin:
         setConfigItem(Key="MinorVersion", Value=minor)
         setConfigItem(Key="patchVersion", Value=patch)
         setConfigItem(Key="plugin version", Value="{0}.{1}.{2}".format(major, minor, patch))
+        
+    def _storeCredentials(self, creds):
+        #store credentials as config item
+        #json_response["Account"], json_response["Password"]
+        Domoticz.Debug("Storing credentials: first credential: " + str(creds.keys()[0]) + " second credential: " + str(creds.keys()[1]))
+        setConfigItem(Key = "credentials", Value = creds)
 
 # Configuration Helpers
 def getConfigItem(Key=None, Default={}):
