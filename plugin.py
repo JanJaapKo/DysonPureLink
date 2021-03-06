@@ -92,7 +92,7 @@ from value_types import SensorsData, StateData
 class DysonPureLinkPlugin:
     #define class variables
     #plugin version
-    version = "3.1.2"
+    version = "3.2.0"
     enabled = False
     mqttClient = None
     #unit numbers for devices to create
@@ -132,9 +132,12 @@ class DysonPureLinkPlugin:
         self.sensor_data = None
         self.state_data = None
         self.mqttClient = None
+        #setConfigItem(Key = "authentication", Value = "test")
 
     def onStart(self):
         Domoticz.Debug("onStart called")
+        # Config = {}
+        # Config = Domoticz.Configuration(Config)
         if Parameters['Mode4'] == 'Debug':
             Domoticz.Debugging(2)
             DumpConfigToLog()
@@ -159,12 +162,14 @@ class DysonPureLinkPlugin:
         Domoticz.Debug("=== start making connection to Dyson account ===")
         dysonAccount = DysonAccount(Parameters['Mode5'], Parameters['Mode3'], "NL")
         dysonAccount.login()
-        #Domoticz.Log("credentials '" + str(dysonAccount.credentials) + "'")
+        Domoticz.Log("credentials '" + str(dysonAccount.credentials) + "'")
         if dysonAccount.logged:
-            self._storeCredentials(dysonAccount.credentials)
+            self._storeCredentials(dysonAccount.credentials, dysonAccount.authentication)
         #deviceList = ()
+        congiguredAuthetication = getConfigItem(Key="authentication",Default="test")
+        authentication = congiguredAuthetication if congiguredAuthetication != "test" else dysonAccount.authentication
         deviceList = []
-        deviceList = dysonAccount.devices()
+        deviceList = dysonAccount.devices(authentication)
         
         if deviceList == None or len(deviceList)<1:
             Domoticz.Log("No devices found in Dyson cloud account")
@@ -182,7 +187,7 @@ class DysonPureLinkPlugin:
                 self.myDevice = deviceList[list(deviceList)[0]]
                 Domoticz.Log("1 device found in cloud, none configured, assuming we need this one: '" + self.myDevice.name + "'")
             else:
-                Domoticz.Error("More than 1 device found in cloud account but no device name given to select")
+                Domoticz.Error("More than 1 device found in cloud account but no device name given to select. Select from available options: " + str(list(deviceList)))
                 return
             Domoticz.Debug("local device pwd:      '"+self.password+"'")
             Domoticz.Debug("cloud device pwd:      '"+self.myDevice.password+"'")
@@ -528,12 +533,15 @@ class DysonPureLinkPlugin:
         setConfigItem(Key="patchVersion", Value=patch)
         setConfigItem(Key="plugin version", Value="{0}.{1}.{2}".format(major, minor, patch))
         
-    def _storeCredentials(self, creds):
+    def _storeCredentials(self, creds, auths):
         #store credentials as config item
-        #json_response["Account"], json_response["Password"]
-        Domoticz.Debug("Storing credentials: first credential: " + str(creds.keys()[0]) + " second credential: " + str(creds.keys()[1]))
-        setConfigItem(Key = "credentials", Value = creds)
-
+        Domoticz.Debug("Storing credentials: " + str(creds) + " and auth object: " + str(auths))
+        currentCreds = getConfigItem(Key = "credentials", Default = None)
+        if currentCreds is None or currentCreds != creds:
+            Domoticz.Log("Credentials from user authentication do not match those stored in config, updating config")
+            setConfigItem(Key = "credentials", Value = creds)
+        return True
+        
 # Configuration Helpers
 def getConfigItem(Key=None, Default={}):
    Value = Default

@@ -8,6 +8,7 @@ from requests.auth import HTTPBasicAuth
 DYSON_API_URL = "appapi.cp.dyson.com"
 DYSON_API_URL_CN = "appapi.cp.dyson.cn"
 DYSON_API_USER_AGENT = "DysonLink/29019 CFNetwork/1188 Darwin/20.0.0"
+DYSON_API_USER_AGENT = "Dalvik/2.1.0 (Linux; U; Android 8.1.0; Google Build/OPM6.171019.030.E1)"
 
 class DysonAccount:
     """Dyson account."""
@@ -34,14 +35,18 @@ class DysonAccount:
     def login(self):
         """Login to dyson web services."""
         # Must first check account status
-        uri = "https://{0}/v1/userregistration/userstatus".format(self._dyson_api_url)
+        uri = "https://{0}/v3/userregistration/userstatus".format(self._dyson_api_url)
+        uri = "https://{0}/v3/userregistration/email/userstatus".format(self._dyson_api_url)
+        #params={"country": self._country, "email": self._email},
         Domoticz.Debug("Request URL: '" + uri + "'")
         accountstatus = requests.get(
             uri,
-            params={"country": self._country, "email": self._email},
+            params={"country": self._country},
+            data={"email": self._email},
             headers=self._headers,
-            verify=False,
+            verify=False
         )
+        Domoticz.Debug("Request text: '" + accountstatus.text + "'")
 
         if accountstatus.status_code == requests.codes.ok:
             json_status = accountstatus.json()
@@ -50,6 +55,8 @@ class DysonAccount:
                 Domoticz.Error("Login to Dyson account failed: not active")
                 self._logged = False
                 return self._logged
+            else:
+                Domoticz.Debug("Account is active, authenticationMethod:  '" + json_status['authenticationMethod'] + "'")
         else:
             Domoticz.Error("Login to Dyson account/userStatus failed: '" +str(accountstatus.status_code)+", " +str(accountstatus.reason)+"'")
             self._logged = False
@@ -81,7 +88,7 @@ class DysonAccount:
             Domoticz.Debug("Login to Dyson account/authenticate failed, returned info: " + str(login.json()))
         return self._logged
 
-    def devices(self):
+    def devices(self, credentials):
         """Return all devices linked to the account."""
         if self._logged:
             Domoticz.Debug("Fetching devices from Dyson Web Services.")
@@ -91,6 +98,7 @@ class DysonAccount:
                     self._dyson_api_url),
                 headers=self._headers,
                 verify=False,
+                #auth=author)
                 auth=self._auth)
             Domoticz.Debug("Reply from Dyson's v1 api: "+str(device_v1_response.json())+"'")
             device_v2_response = requests.get(
@@ -98,6 +106,7 @@ class DysonAccount:
                     self._dyson_api_url),
                 headers=self._headers,
                 verify=False,
+                #auth=author)
                 auth=self._auth)
             Domoticz.Debug("Reply from Dyson's v2 api: "+str(device_v2_response.json())+"'")
             devices_dict = {} #using a dictionary to overwright double entries
