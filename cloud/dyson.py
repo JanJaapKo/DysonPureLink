@@ -2,7 +2,7 @@
 
 import Domoticz
 import requests
-from dyson_device import DysonDevice
+# from .dyson_device import DysonDevice
 from requests.auth import HTTPBasicAuth
 
 DYSON_API_URL = "appapi.cp.dyson.com"
@@ -112,12 +112,12 @@ class DysonAccount:
             devices_dict = {} #using a dictionary to overwright double entries
             for device in device_v1_response.json():
                 Domoticz.Debug("Device returned from Dyson v1 api: "+str(device)+"'")
-                dyson_device = DysonDevice(device)
-                devices_dict[dyson_device.name] = dyson_device
+                # dyson_device = DysonDevice(device)
+                # devices_dict[dyson_device.name] = dyson_device
             for device in device_v2_response.json():
                 Domoticz.Debug("Device returned from Dyson v2 api: "+str(device)+"'")
-                dyson_device = DysonDevice(device)
-                devices_dict[dyson_device.name] = dyson_device
+                # dyson_device = DysonDevice(device)
+                # devices_dict[dyson_device.name] = dyson_device
             return devices_dict
         else:
             Domoticz.Log("Not logged to Dyson Web Services.")
