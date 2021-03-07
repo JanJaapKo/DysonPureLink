@@ -63,18 +63,19 @@ class DysonAccount:
 
     def __init__(
         self,
-        auth_info: Optional[dict] = None,
+        auth_info = None,
     ):
         """Create a new Dyson account."""
         self._auth_info = auth_info
 
     @property
-    def auth_info(self) -> Optional[dict]:
+    def auth_info(self):
         """Return the authentication info."""
         return self._auth_info
 
     @property
-    def _auth(self) -> Optional[AuthBase]:
+    def _auth(self):
+        """returns authentication info as  AuthBase or HTTPBasicAuth object """
         if self.auth_info is None:
             return None
         # Although basic auth is no longer used by new logins,
@@ -91,13 +92,13 @@ class DysonAccount:
 
     def request(
         self,
-        method: str,
-        path: str,
-        params: Optional[dict] = None,
-        data: Optional[dict] = None,
-        auth: bool = True,
-    ) -> requests.Response:
-        """Make API request."""
+        method,
+        path,
+        params = None,
+        data = None,
+        auth = True,
+    ):
+        """Make API request. Return response object"""
         if auth and self._auth is None:
             raise DysonAuthRequired
         try:
@@ -144,7 +145,7 @@ class DysonAccount:
 
         challenge_id = response.json()["challengeId"]
 
-        def _verify(otp_code: str, password: str):
+        def _verify(otp_code, password:
             response = self.request(
                 "POST",
                 API_PATH_EMAIL_VERIFY,
@@ -164,8 +165,8 @@ class DysonAccount:
 
         return _verify
 
-    def devices(self) -> List[DysonDeviceInfo]:
-        """Get device info from cloud account."""
+    def devices(self):
+        """Get device info from cloud account. Returns list of DysonDeviceInfo objects"""
         devices = []
         response = self.request("GET", API_PATH_DEVICES)
         for raw in response.json():
@@ -178,7 +179,7 @@ class DysonAccountCN(DysonAccount):
 
     _HOST = DYSON_API_HOST_CN
 
-    def login_mobile_otp(self, mobile: str) -> Callable[[str], dict]:
+    def login_mobile_otp(self, mobile):
         """Login using phone number and OTP code."""
         response = self.request(
             "POST",
@@ -191,7 +192,7 @@ class DysonAccountCN(DysonAccount):
 
         challenge_id = response.json()["challengeId"]
 
-        def _verify(otp_code: str):
+        def _verify(otp_code):
             response = self.request(
                 "POST",
                 API_PATH_MOBILE_VERIFY,
