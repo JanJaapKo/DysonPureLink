@@ -1,7 +1,7 @@
 """basic commands for Dyson devices"""
 
 import json, os, time
-from exceptions import DysonInvalidTargetTemperatureException as DITTE
+from cloud.exceptions import DysonInvalidTargetTemperatureException as DITTE
 
 class DysonCommands(object):
 
