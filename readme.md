@@ -38,6 +38,7 @@ See the [Wiki](https://github.com/JanJaapKo/DysonPureLink/wiki) page for configu
 
 based on info from the following sources:
 
+- https://github.com/shenxn/ha-dyson
 - https://www.hackster.io/uladzislau-bayouski/merge-the-dyson-link-b763c3
 - http://aakira.hatenablog.com/entry/2016/08/12/012654
 - https://github.com/CharlesBlonde/libpurecoollink
