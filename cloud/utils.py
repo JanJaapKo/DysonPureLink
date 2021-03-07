@@ -14,9 +14,9 @@ DYSON_ENCRYPTION_INIT_VECTOR = (
 )
 
 
-def _unpad(string):
+def _unpad(in_string):
     """Un-pad string."""
-    return string[: -ord(string[len(string) - 1 :])]
+    return in_string[: -ord(in_string[len(in_string) - 1 :])]
 
 
 def decrypt_password(encrypted_password):
