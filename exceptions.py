@@ -3,6 +3,7 @@
 
 class DysonException(Exception):
     """Base class for exceptions."""
+    pass
 
 class DysonInvalidTargetTemperatureException(DysonException):
     """Invalid target temperature Exception."""
@@ -49,44 +50,45 @@ class DysonNotLoggedException(DysonException):
         
 class DysonNetworkError(DysonException):
     """Represents network error."""
+    pass
 
 
 class DysonServerError(DysonException):
     """Represents Dyson server error."""
-
+    pass
 
 class DysonInvalidAccountStatus(DysonException):
     """Represents invalid account status."""
-
+    pass
 
 class DysonLoginFailure(DysonException):
     """Represents failure during logging in."""
-
+    pass
 
 class DysonOTPTooFrequently(DysonException):
     """Represents requesting OTP code too frequently."""
-
+    pass
 
 class DysonAuthRequired(DysonException):
     """Represents not logged into could."""
-
+    pass
 
 class DysonInvalidAuth(DysonException):
     """Represents invalid authentication."""
-
+    pass
 
 class DysonConnectTimeout(DysonException):
     """Represents mqtt connection timeout."""
-
+    pass
 
 class DysonNotConnected(DysonException):
     """Represents mqtt not connected."""
-
+    pass
 
 class DysonInvalidCredential(DysonException):
     """Requesents invalid mqtt credential."""
-
+    pass
 
 class DysonConnectionRefused(DysonException):
     """Represents mqtt connection refused by the server."""
-
+    pass

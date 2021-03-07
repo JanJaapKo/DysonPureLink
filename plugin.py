@@ -87,7 +87,8 @@ import base64, hashlib
 from mqtt import MqttClient
 from dyson_pure_link_device import DysonPureLinkDevice
 from cloud.dyson import DysonAccount
-import cloud.account
+from cloud.account import DysonAccountNew
+
 from value_types import SensorsData, StateData
 
 class DysonPureLinkPlugin:

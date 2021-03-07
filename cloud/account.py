@@ -56,7 +56,7 @@ class HTTPBearerAuth(AuthBase):
         return r
 
 
-class DysonAccount:
+class DysonAccountNew:
     """Dyson account."""
 
     _HOST = DYSON_API_HOST
@@ -145,25 +145,25 @@ class DysonAccount:
 
         challenge_id = response.json()["challengeId"]
 
-        def _verify(otp_code, password:
-            response = self.request(
-                "POST",
-                API_PATH_EMAIL_VERIFY,
-                data={
-                    "email": email,
-                    "password": password,
-                    "challengeId": challenge_id,
-                    "otpCode": otp_code,
-                },
-                auth=False,
-            )
-            if response.status_code == 400:
-                raise DysonLoginFailure
-            body = response.json()
-            self._auth_info = body
-            return self._auth_info
+    def _verify(otp_code, password):
+        response = self.request(
+            "POST",
+            API_PATH_EMAIL_VERIFY,
+            data={
+                "email": email,
+                "password": password,
+                "challengeId": challenge_id,
+                "otpCode": otp_code,
+            },
+            auth=False,
+        )
+        if response.status_code == 400:
+            raise DysonLoginFailure
+        body = response.json()
+        self._auth_info = body
+        return self._auth_info
 
-        return _verify
+    return _verify
 
     def devices(self):
         """Get device info from cloud account. Returns list of DysonDeviceInfo objects"""
