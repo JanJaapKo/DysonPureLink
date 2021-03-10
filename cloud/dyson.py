@@ -1,6 +1,11 @@
 """Dyson Pure Cool Link library."""
 
-import Domoticz
+try:
+	import Domoticz
+	debug = False
+except ImportError:
+	import fakeDomoticz as Domoticz
+	debug = True
 import requests
 # from .dyson_device import DysonDevice
 from requests.auth import HTTPBasicAuth

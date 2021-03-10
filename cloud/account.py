@@ -119,7 +119,8 @@ class DysonAccountNew:
             raise DysonServerError
         return response
 
-    def login_email_otp(self, email: str, region: str) -> Callable[[str], dict]:
+    #def login_email_otp(self, email: str, region: str) -> Callable[[str], dict]:
+    def login_email_otp(self, email, region):
         """Login using email and OTP code."""
         # Check account status first. This is expected by the cloud API.
         response = self.request(
@@ -170,11 +171,16 @@ class DysonAccountNew:
         devices = []
         response = self.request("GET", API_PATH_DEVICES)
         for raw in response.json():
+            if raw.get("LocalCredentials") is None:
+                # Lightcycle lights don't have LocalCredentials.
+                # They're not supported so just skip.
+                # See https://github.com/shenxn/libdyson/issues/2 for more info
+                continue
             devices.append(DysonDeviceInfo.from_raw(raw))
         return devices
 
 
-class DysonAccountCN(DysonAccount):
+class DysonAccountCN(DysonAccountNew):
     """Dyson account in Mainland China."""
 
     _HOST = DYSON_API_HOST_CN

@@ -80,14 +80,19 @@
 </plugin>
 """
 
-import Domoticz
+try:
+	import Domoticz
+	debug = False
+except ImportError:
+	import fakeDomoticz as Domoticz
+	debug = True
 import json
 import time
 import base64, hashlib
 from mqtt import MqttClient
 from dyson_pure_link_device import DysonPureLinkDevice
 from cloud.dyson import DysonAccount
-#from cloud.account import DysonAccountNew
+from cloud.account import DysonAccountNew
 
 from value_types import SensorsData, StateData
 
@@ -140,12 +145,12 @@ class DysonPureLinkPlugin:
         Domoticz.Debug("onStart called")
         # Config = {}
         # Config = Domoticz.Configuration(Config)
-        if Parameters['Mode4'] == 'Debug':
-            Domoticz.Debugging(2)
-            DumpConfigToLog()
-        if Parameters['Mode4'] == 'Verbose':
-            Domoticz.Debugging(1+2+4+8+16+64)
-            DumpConfigToLog()
+        # if Parameters['Mode4'] == 'Debug':
+            # Domoticz.Debugging(2)
+            # DumpConfigToLog()
+        # if Parameters['Mode4'] == 'Verbose':
+            # Domoticz.Debugging(1+2+4+8+16+64)
+            # DumpConfigToLog()
                 
         #PureLink needs polling, get from config
         Domoticz.Heartbeat(10)

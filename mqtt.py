@@ -1,5 +1,10 @@
 # Based on https://github.com/emontnemery/domoticz_mqtt_discovery
-import Domoticz
+try:
+	import Domoticz
+	debug = False
+except ImportError:
+	import fakeDomoticz as Domoticz
+	debug = True
 import time
 import json
 
