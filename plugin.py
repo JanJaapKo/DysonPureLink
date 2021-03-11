@@ -143,14 +143,15 @@ class DysonPureLinkPlugin:
 
     def onStart(self):
         Domoticz.Debug("onStart called")
+        #setConfigItem(Key="challenge_id", Value = "")
         # Config = {}
         # Config = Domoticz.Configuration(Config)
-        # if Parameters['Mode4'] == 'Debug':
-            # Domoticz.Debugging(2)
-            # DumpConfigToLog()
-        # if Parameters['Mode4'] == 'Verbose':
-            # Domoticz.Debugging(1+2+4+8+16+64)
-            # DumpConfigToLog()
+        if Parameters['Mode4'] == 'Debug':
+            Domoticz.Debugging(2)
+            DumpConfigToLog()
+        if Parameters['Mode4'] == 'Verbose':
+            Domoticz.Debugging(1+2+4+8+16+64)
+            DumpConfigToLog()
                 
         #PureLink needs polling, get from config
         Domoticz.Heartbeat(10)
@@ -164,9 +165,31 @@ class DysonPureLinkPlugin:
         mqtt_client_id = ""
         self.runCounter = int(Parameters['Mode2'])
         self.pingCounter = int(self.runCounter/2)
+        self.account_password = Parameters['Mode3']
+        self.account_email = Parameters['Mode5']
         
         #create a Dyson account
-        Domoticz.Debug("=== start making connection to Dyson account ===")
+
+        #new authentication
+        Domoticz.Debug("=== start making connection to Dyson account, new method ===")
+        dysonAccount2 = DysonAccountNew()
+        challenge_id = getConfigItem(Key="challenge_id", Default = "")
+        if challenge_id == "":
+            #request otp code via email when no code entered
+            challenge_id = dysonAccount2.login_email_otp(self.account_email, "NL")
+            setConfigItem(Key="challenge_id", Value = challenge_id)
+        else:
+            #verify the received code
+            otp = 342254
+            dysonAccount2.verify(otp, self.account_email, self.account_password, challenge_id)
+            #get list of devices info's
+            devices = dysonAccount2.devices()
+            Domoticz.Debug("found some new devices? " + str(devices))
+            #devices retreived succesfully, delete challenge_id
+            setConfigItem(Key="challenge_id", Value = "")
+       
+        #old authentication
+        Domoticz.Debug("=== start making connection to Dyson account, old method ===")
         dysonAccount = DysonAccount(Parameters['Mode5'], Parameters['Mode3'], "NL")
         dysonAccount.login()
         Domoticz.Log("credentials '" + str(dysonAccount.credentials) + "'")

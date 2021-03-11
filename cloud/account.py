@@ -1,7 +1,7 @@
 """Dyson cloud account client."""
 
 import pathlib
-
+import Domoticz
 import requests
 from requests.auth import AuthBase, HTTPBasicAuth
 
@@ -99,6 +99,7 @@ class DysonAccountNew:
         auth = True,
     ):
         """Make API request. Return response object"""
+        Domoticz.Debug("building request: path {0}, params {1}, data {2}".format(path, params, data))
         if auth and self._auth is None:
             raise DysonAuthRequired
         try:
@@ -113,6 +114,8 @@ class DysonAccountNew:
             )
         except requests.RequestException:
             raise DysonNetworkError
+        if response.status_code  != requests.codes.ok:
+            Domoticz.Error("Dyson request failed: '" +str(response.status_code)+", " +str(response.reason)+"'")
         if response.status_code in [401, 403]:
             raise DysonInvalidAuth
         if 500 <= response.status_code < 600:
@@ -146,25 +149,25 @@ class DysonAccountNew:
 
         challenge_id = response.json()["challengeId"]
 
-        def _verify(otp_code, password):
-            response = self.request(
-                "POST",
-                API_PATH_EMAIL_VERIFY,
-                data={
-                    "email": email,
-                    "password": password,
-                    "challengeId": challenge_id,
-                    "otpCode": otp_code,
-                },
-                auth=False,
-            )
-            if response.status_code == 400:
-                raise DysonLoginFailure
-            body = response.json()
-            self._auth_info = body
-            return self._auth_info
+        return challenge_id
 
-        return _verify
+    def verify(self, otp_code, email, password, challenge_id):
+        response = self.request(
+            "POST",
+            API_PATH_EMAIL_VERIFY,
+            data={
+                "email": email,
+                "password": password,
+                "challengeId": challenge_id,
+                "otpCode": otp_code,
+            },
+            auth=False,
+        )
+        if response.status_code == 400:
+            raise DysonLoginFailure
+        body = response.json()
+        self._auth_info = body
+        return self._auth_info
 
     def devices(self):
         """Get device info from cloud account. Returns list of DysonDeviceInfo objects"""
