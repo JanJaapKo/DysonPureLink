@@ -180,26 +180,27 @@ class DysonPureLinkPlugin:
             setConfigItem(Key="challenge_id", Value = challenge_id)
         else:
             #verify the received code
-            otp = "241799"
+            otp = "386348"
             dysonAccount2.verify(otp, self.account_email, self.account_password, challenge_id)
+            setConfigItem(Key="challenge_id", Value = "") #reset challenge id as it is no longer valid
             #get list of devices info's
             devices = dysonAccount2.devices()
             Domoticz.Debug("found some new devices? " + str(devices))
             #devices retreived succesfully, delete challenge_id
-            setConfigItem(Key="challenge_id", Value = "")
+            setConfigItem(Key="LocalCredentials", Value = devices[0].credential) #store the local credential
        
         #old authentication
-        Domoticz.Debug("=== start making connection to Dyson account, old method ===")
-        dysonAccount = DysonAccount(Parameters['Mode5'], Parameters['Mode3'], "NL")
-        dysonAccount.login()
-        Domoticz.Log("credentials '" + str(dysonAccount.credentials) + "'")
-        if dysonAccount.logged:
-            self._storeCredentials(dysonAccount.credentials, dysonAccount.authentication)
-        #deviceList = ()
-        congiguredAuthetication = getConfigItem(Key="authentication",Default="test")
-        authentication = congiguredAuthetication if congiguredAuthetication != "test" else dysonAccount.authentication
+        # Domoticz.Debug("=== start making connection to Dyson account, old method ===")
+        # dysonAccount = DysonAccount(Parameters['Mode5'], Parameters['Mode3'], "NL")
+        # dysonAccount.login()
+        # Domoticz.Log("credentials '" + str(dysonAccount.credentials) + "'")
+        # if dysonAccount.logged:
+            # self._storeCredentials(dysonAccount.credentials, dysonAccount.authentication)
+        # #deviceList = ()
+        # congiguredAuthetication = getConfigItem(Key="authentication",Default="test")
+        # authentication = congiguredAuthetication if congiguredAuthetication != "test" else dysonAccount.authentication
         deviceList = []
-        deviceList = dysonAccount.devices(authentication)
+        # deviceList = dysonAccount.devices(authentication)
         
         if deviceList == None or len(deviceList)<1:
             Domoticz.Log("No devices found in Dyson cloud account")
