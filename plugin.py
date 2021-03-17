@@ -180,7 +180,7 @@ class DysonPureLinkPlugin:
             setConfigItem(Key="challenge_id", Value = challenge_id)
         else:
             #verify the received code
-            otp = 342254
+            otp = "241799"
             dysonAccount2.verify(otp, self.account_email, self.account_password, challenge_id)
             #get list of devices info's
             devices = dysonAccount2.devices()

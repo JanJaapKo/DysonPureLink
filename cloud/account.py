@@ -99,7 +99,7 @@ class DysonAccountNew:
         auth = True,
     ):
         """Make API request. Return response object"""
-        Domoticz.Debug("building request: path {0}, params {1}, data {2}".format(path, params, data))
+        Domoticz.Debug("building request: method {0}, path {1}, params {2}, data {3}, auth {4}".format(method, path, params, data, self._auth if auth else None))
         if auth and self._auth is None:
             raise DysonAuthRequired
         try:
