@@ -171,7 +171,8 @@ class DysonAccountNew:
 
     def devices(self):
         """Get device info from cloud account. Returns list of DysonDeviceInfo objects"""
-        devices = []
+        #devices = []
+        devices_dict = {} #using a dictionary to overwrite double entries + enable lookup by name
         response = self.request("GET", API_PATH_DEVICES)
         for raw in response.json():
             if raw.get("LocalCredentials") is None:
@@ -179,8 +180,10 @@ class DysonAccountNew:
                 # They're not supported so just skip.
                 # See https://github.com/shenxn/libdyson/issues/2 for more info
                 continue
-            devices.append(DysonDeviceInfo.from_raw(raw))
-        return devices
+            devInfo = DysonDeviceInfo.from_raw(raw)
+            #devices.append(devInfo)
+            devices_dict[devInfo.name] = devInfo
+        return devices_dict
 
 
 class DysonAccountCN(DysonAccountNew):

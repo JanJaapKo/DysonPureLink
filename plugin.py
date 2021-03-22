@@ -94,6 +94,8 @@ from dyson_pure_link_device import DysonPureLinkDevice
 from cloud.dyson import DysonAccount
 from cloud.account import DysonAccountNew
 
+#from cloud.fakeCloud import fakeResponse
+
 from value_types import SensorsData, StateData
 
 class DysonPureLinkPlugin:
@@ -143,9 +145,8 @@ class DysonPureLinkPlugin:
 
     def onStart(self):
         Domoticz.Debug("onStart called")
-        #setConfigItem(Key="challenge_id", Value = "")
-        # Config = {}
-        # Config = Domoticz.Configuration(Config)
+        Config = {}
+        Config = Domoticz.Configuration(Config)
         if Parameters['Mode4'] == 'Debug':
             Domoticz.Debugging(2)
             DumpConfigToLog()
@@ -169,39 +170,61 @@ class DysonPureLinkPlugin:
         self.account_email = Parameters['Mode5']
         
         #create a Dyson account
+        deviceList = []
 
         #new authentication
-        Domoticz.Debug("=== start making connection to Dyson account, new method ===")
-        dysonAccount2 = DysonAccountNew()
-        challenge_id = getConfigItem(Key="challenge_id", Default = "")
-        if challenge_id == "":
-            #request otp code via email when no code entered
-            challenge_id = dysonAccount2.login_email_otp(self.account_email, "NL")
-            setConfigItem(Key="challenge_id", Value = challenge_id)
-        else:
-            #verify the received code
-            otp = "386348"
-            dysonAccount2.verify(otp, self.account_email, self.account_password, challenge_id)
-            setConfigItem(Key="challenge_id", Value = "") #reset challenge id as it is no longer valid
-            #get list of devices info's
-            devices = dysonAccount2.devices()
-            Domoticz.Debug("found some new devices? " + str(devices))
-            #devices retreived succesfully, delete challenge_id
-            setConfigItem(Key="LocalCredentials", Value = devices[0].credential) #store the local credential
+        # Domoticz.Debug("=== start making connection to Dyson account, new method ===")
+        # dysonAccount2 = DysonAccountNew()
+        # challenge_id = getConfigItem(Key="challenge_id", Default = "")
+        # setConfigItem(Key="challenge_id", Value = "") #clear after use
+        # if challenge_id == "":
+            # #request otp code via email when no code entered
+            # challenge_id = dysonAccount2.login_email_otp(self.account_email, "NL")
+            # setConfigItem(Key="challenge_id", Value = challenge_id)
+            # Domoticz.Log('==== An OTP code had been requestyed, please check email and paste code into plugin=====')
+            # return
+        # else:
+            # #verify the received code
+            # otp = "226432"
+            # dysonAccount2.verify(otp, self.account_email, self.account_password, challenge_id)
+            # setConfigItem(Key="challenge_id", Value = "") #reset challenge id as it is no longer valid
+            # #get list of devices info's
+            # deviceList = dysonAccount2.devices()
+            # #devices retreived succesfully, delete challenge_id
+            # deviceNames = list(deviceList.keys())
+            # Domoticz.Debug("found some new devices: " + str(deviceNames) + "first being: " + deviceNames[0])
+            # i=0
+            # for device in deviceList:
+                # setConfigItem(Key="{0}.name".format(i), Value = deviceNames[i]) #store the name of the machine
+                # Domoticz.Debug('Key="{0}.name", Value = {1}'.format(i, deviceNames[i])) #store the name of the machine
+                # setConfigItem(Key="{0}.credential".format(deviceList[deviceNames[i]].name), Value = deviceList[deviceNames[i]].credential) #store the credential
+                # Domoticz.Debug('Key="{0}.credential", Value = {1}'.format(deviceList[deviceNames[i]].name, deviceList[deviceNames[i]].credential)) #store the credential
+                # setConfigItem(Key="{0}.serial".format(deviceList[deviceNames[i]].name), Value = deviceList[deviceNames[i]].serial) #store the serial
+                # Domoticz.Debug('Key="{0}.serial", Value =  {1}'.format(deviceList[deviceNames[i]].name, deviceList[deviceNames[i]].serial)) #store the serial
+                # setConfigItem(Key="{0}.product_type".format(deviceList[deviceNames[i]].name), Value = deviceList[deviceNames[i]].product_type) #store the product_type
+                # Domoticz.Debug('Key="{0}.product_type" , Value = {1}'.format(deviceList[deviceNames[i]].name, deviceList[deviceNames[i]].product_type)) #store the product_type
+                # i = i + 1
        
-        #old authentication
-        # Domoticz.Debug("=== start making connection to Dyson account, old method ===")
-        # dysonAccount = DysonAccount(Parameters['Mode5'], Parameters['Mode3'], "NL")
-        # dysonAccount.login()
-        # Domoticz.Log("credentials '" + str(dysonAccount.credentials) + "'")
-        # if dysonAccount.logged:
-            # self._storeCredentials(dysonAccount.credentials, dysonAccount.authentication)
-        # #deviceList = ()
-        # congiguredAuthetication = getConfigItem(Key="authentication",Default="test")
-        # authentication = congiguredAuthetication if congiguredAuthetication != "test" else dysonAccount.authentication
-        deviceList = []
-        # deviceList = dysonAccount.devices(authentication)
-        
+
+        #mock the response for testing without 2 step
+        # myResponse = fakeResponse()
+        # deviceList = myResponse.devices()
+        # deviceNames = list(deviceList.keys())
+        # i=0
+        # for device in deviceList:
+            # Domoticz.Debug("found some new devices: " + str(deviceNames) + "first being: " + deviceNames[0])
+            # setConfigItem(Key="{0}.name".format(i), Value = deviceNames[i]) #store the name of the machine
+            # Domoticz.Debug('Key="{0}.name", Value = {1}'.format(i, deviceNames[i])) #store the name of the machine
+            # setConfigItem(Key="{0}.credential".format(deviceList[deviceNames[i]].name), Value = deviceList[deviceNames[i]].credential) #store the credential
+            # Domoticz.Debug('Key="{0}.credential", Value = {1}'.format(deviceList[deviceNames[i]].name, deviceList[deviceNames[i]].credential)) #store the credential
+            # setConfigItem(Key="{0}.serial".format(deviceList[deviceNames[i]].name), Value = deviceList[deviceNames[i]].serial) #store the serial
+            # Domoticz.Debug('Key="{0}.serial", Value =  {1}'.format(deviceList[deviceNames[i]].name, deviceList[deviceNames[i]].serial)) #store the serial
+            # setConfigItem(Key="{0}.product_type".format(deviceList[deviceNames[i]].name), Value = deviceList[deviceNames[i]].product_type) #store the product_type
+            # Domoticz.Debug('Key="{0}.product_type" , Value = {1}'.format(deviceList[deviceNames[i]].name, deviceList[deviceNames[i]].product_type)) #store the product_type
+            # i = i + 1
+        # DumpConfigToLog()
+        #return
+                
         if deviceList == None or len(deviceList)<1:
             Domoticz.Log("No devices found in Dyson cloud account")
         else:
@@ -218,12 +241,13 @@ class DysonPureLinkPlugin:
                 self.myDevice = deviceList[list(deviceList)[0]]
                 Domoticz.Log("1 device found in cloud, none configured, assuming we need this one: '" + self.myDevice.name + "'")
             else:
-                Domoticz.Error("More than 1 device found in cloud account but no device name given to select. Select from available options: " + str(list(deviceList)))
+                #more than 1 device returned in cloud, which the the plugin can't handle at this point in time
+                Domoticz.Error("More than 1 device found in cloud account but no device name given to select. Select and filter one from available options: " + str(list(deviceList)))
                 return
             Domoticz.Debug("local device pwd:      '"+self.password+"'")
-            Domoticz.Debug("cloud device pwd:      '"+self.myDevice.password+"'")
+            Domoticz.Debug("cloud device pwd:      '"+self.myDevice.credential+"'")
             Parameters['Username'] = self.myDevice.serial #take username from account
-            Parameters['Password'] = self.myDevice.password #override the default password with the one returned from the cloud
+            Parameters['Password'] = self.myDevice.credential #override the default password with the one returned from the cloud
         elif len(Parameters['Username'])>0:
             Domoticz.Log("No cloud devices found, the local credentials will be used")
             #create a Dyson device object using plugin parameters
@@ -589,17 +613,20 @@ def getConfigItem(Key=None, Default={}):
    return Value
    
 def setConfigItem(Key=None, Value=None):
-   Config = {}
-   try:
+    Config = {}
+    if type(Value) not in (str, int, float, bool, bytes, bytearray, list, dict):
+        Domoticz.Error("A value is specified of a not allowed type: '" + str(type(Value)) + "'")
+        return Config
+    try:
        Config = Domoticz.Configuration()
        if (Key != None):
            Config[Key] = Value
        else:
            Config = Value  # set whole configuration if no key specified
        Config = Domoticz.Configuration(Config)
-   except Exception as inst:
+    except Exception as inst:
        Domoticz.Error("Domoticz.Configuration operation failed: '"+str(inst)+"'")
-   return Config
+    return Config
        
 def UpdateDevice(Unit, nValue, sValue, BatteryLevel=255, AlwaysUpdate=False):
     if Unit not in Devices: return

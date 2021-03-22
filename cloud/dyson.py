@@ -114,7 +114,7 @@ class DysonAccount:
                 #auth=author)
                 auth=self._auth)
             Domoticz.Debug("Reply from Dyson's v2 api: "+str(device_v2_response.json())+"'")
-            devices_dict = {} #using a dictionary to overwright double entries
+            devices_dict = {} #using a dictionary to overwrite double entries
             for device in device_v1_response.json():
                 Domoticz.Debug("Device returned from Dyson v1 api: "+str(device)+"'")
                 # dyson_device = DysonDevice(device)

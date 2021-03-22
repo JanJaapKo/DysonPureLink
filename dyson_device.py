@@ -109,6 +109,10 @@ class DysonDevice(commands.DysonCommands):
         """Return True if device is fully available, else false."""
         return self._device_available
 
+    @property
+    def device_base_topic(self):
+        return '{0}/{1}'.format(self.product_type, self.serial)
+
     def _fields(self):
         """Return list of field tuples."""
         fields = [("serial", self.serial), ("active", str(self.active)),
