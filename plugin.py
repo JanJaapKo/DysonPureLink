@@ -129,7 +129,6 @@ class DysonPureLinkPlugin:
     particlesMatter25Unit = 21
     particlesMatter10Unit = 22
 
-
     runCounter = 6
     pingCounter = 3
 
@@ -141,12 +140,11 @@ class DysonPureLinkPlugin:
         self.sensor_data = None
         self.state_data = None
         self.mqttClient = None
-        #setConfigItem(Key = "authentication", Value = "test")
 
     def onStart(self):
         Domoticz.Debug("onStart called")
-        Config = {}
-        Config = Domoticz.Configuration(Config)
+        #Config = {}
+        #Config = Domoticz.Configuration(Config)
         if Parameters['Mode4'] == 'Debug':
             Domoticz.Debugging(2)
             DumpConfigToLog()
@@ -162,7 +160,7 @@ class DysonPureLinkPlugin:
         #read out parameters for local connection
         self.ip_address = Parameters["Address"].strip()
         self.port_number = Parameters["Port"].strip()
-        self.password = self._hashed_password(Parameters['Password'])
+        #self.password = self._hashed_password(Parameters['Password'])
         mqtt_client_id = ""
         self.runCounter = int(Parameters['Mode2'])
         self.pingCounter = int(self.runCounter/2)
@@ -170,7 +168,7 @@ class DysonPureLinkPlugin:
         self.account_email = Parameters['Mode5']
         
         #create a Dyson account
-        deviceList = []
+        deviceList = self.get_device_names()
 
         #new authentication
         # Domoticz.Debug("=== start making connection to Dyson account, new method ===")
@@ -233,7 +231,10 @@ class DysonPureLinkPlugin:
         if deviceList != None and len(deviceList) > 0:
             if len(Parameters['Mode6']) > 0:
                 if Parameters['Mode6'] in deviceList:
-                    self.myDevice = deviceList[Parameters['Mode6']]
+                    #self.myDevice = deviceList[Parameters['Mode6']]
+                    password, serialNumber, deviceType= self.get_device_config(Parameters['Mode6'])
+                    Domoticz.Debug("password: {0}, serialNumber: {1}, deviceType: {2}".format(password, serialNumber, deviceType))
+                    self.myDevice = DysonPureLinkDevice(password, serialNumber, deviceType)
                 else:
                     Domoticz.Error("The configured device name '" + Parameters['Mode6'] + "' was not found in the cloud account. Available options: " + str(list(deviceList)))
                     return
@@ -244,17 +245,17 @@ class DysonPureLinkPlugin:
                 #more than 1 device returned in cloud, which the the plugin can't handle at this point in time
                 Domoticz.Error("More than 1 device found in cloud account but no device name given to select. Select and filter one from available options: " + str(list(deviceList)))
                 return
-            Domoticz.Debug("local device pwd:      '"+self.password+"'")
-            Domoticz.Debug("cloud device pwd:      '"+self.myDevice.credential+"'")
+            #Domoticz.Debug("local device pwd:      '"+self.password+"'")
+            Domoticz.Debug("cloud device pwd:      '"+self.myDevice.password+"'")
             Parameters['Username'] = self.myDevice.serial #take username from account
-            Parameters['Password'] = self.myDevice.credential #override the default password with the one returned from the cloud
-        elif len(Parameters['Username'])>0:
-            Domoticz.Log("No cloud devices found, the local credentials will be used")
-            #create a Dyson device object using plugin parameters
-            Domoticz.Debug("local device pwd:      '"+self.password+"'")
-            Domoticz.Debug("local device usn:      '"+Parameters['Username']+"'")
-            Parameters['Password'] = self.password
-            self.myDevice = DysonPureLinkDevice(Parameters['Password'], Parameters['Username'], Parameters['Mode1'])
+            Parameters['Password'] = self.myDevice.password #override the default password with the one returned from the cloud
+        # elif len(Parameters['Username'])>0:
+            # Domoticz.Log("No cloud devices found, the local credentials will be used")
+            # #create a Dyson device object using plugin parameters
+            # Domoticz.Debug("local device pwd:      '"+self.password+"'")
+            # Domoticz.Debug("local device usn:      '"+Parameters['Username']+"'")
+            # Parameters['Password'] = self.password
+            # self.myDevice = DysonPureLinkDevice(Parameters['Password'], Parameters['Username'], Parameters['Mode1'])
         else:
             Domoticz.Error("No usable credentials found")
             return
@@ -574,6 +575,28 @@ class DysonPureLinkPlugin:
             #store new version info
             self._setVersion(MaCurrent,MiCurrent,PaCurrent)
             
+    def get_device_names(self):
+        """find the amount of stored devices"""
+        Configurations = getConfigItem()
+        devices = {}
+        for x in Configurations:
+            if x.find(".") > -1 and x.split(".")[1] == "name":
+                devices[str(Configurations[x])] = str(Configurations[x])
+        return devices
+        
+    def get_device_config(self, name):
+        """fetch all relevant config items from Domoticz.Configuration for device with name"""
+        Configurations = getConfigItem()
+        for x in Configurations:
+            if x.split(".")[1] == "name":
+                Domoticz.Debug("Found a machine name: " + x + " value: '" + str(Configurations[x]) + "'")
+                if Configurations[x] == name:
+                    password = getConfigItem(Key="{0}.{1}".format(name, "credential"))
+                    serialNumber = getConfigItem(Key="{0}.{1}".format(name, "serial"))
+                    deviceType = getConfigItem(Key="{0}.{1}".format(name, "product_type"))
+                    return password, serialNumber, deviceType
+        return
+        
     def _hashed_password(self, pwd):
         """Hash password (found in manual) to a base64 encoded of its sha512 value"""
         hash = hashlib.sha512()
