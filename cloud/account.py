@@ -56,7 +56,7 @@ class HTTPBearerAuth(AuthBase):
         return r
 
 
-class DysonAccountNew:
+class DysonAccount:
     """Dyson account."""
 
     _HOST = DYSON_API_HOST
@@ -186,7 +186,7 @@ class DysonAccountNew:
         return devices_dict
 
 
-class DysonAccountCN(DysonAccountNew):
+class DysonAccountCN(DysonAccount):
     """Dyson account in Mainland China."""
 
     _HOST = DYSON_API_HOST_CN

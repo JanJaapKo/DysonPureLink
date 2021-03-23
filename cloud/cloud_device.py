@@ -1,7 +1,7 @@
 """Dyson device cloud client."""
 
 
-from .account import DysonAccountNew
+from .account import DysonAccount
 
 
 class DysonCloudDevice:
