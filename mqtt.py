@@ -1,5 +1,10 @@
 # Based on https://github.com/emontnemery/domoticz_mqtt_discovery
-import Domoticz
+try:
+	import Domoticz
+	debug = False
+except ImportError:
+	import fakeDomoticz as Domoticz
+	debug = True
 import time
 import json
 
@@ -13,7 +18,7 @@ class MqttClient:
     mqttPublishCb = None
 
     def __init__(self, destination, port, clientId, mqttConnectedCb, mqttDisconnectedCb, mqttPublishCb, mqttSubackCb):
-        Domoticz.Debug("MqttClient::__init__")
+        #Domoticz.Debug("MqttClient::__init__")
         
         self.address = destination
         self.port = port
@@ -25,7 +30,7 @@ class MqttClient:
         self.Open()
 
     def __str__(self):
-        Domoticz.Debug("MqttClient::__str__")
+        #Domoticz.Debug("MqttClient::__str__")
         if (self.mqttConn != None):
             return str(self.mqttConn)
         else:
@@ -53,7 +58,7 @@ class MqttClient:
             self.mqttConn.Send({'Verb': 'CONNECT', 'ID': self.client_id})
 
     def Ping(self):
-        Domoticz.Debug("MqttClient::Ping")
+        #Domoticz.Debug("MqttClient::Ping")
         if (self.mqttConn == None or not self.isConnected):
             self.Open()
         else:
@@ -98,7 +103,7 @@ class MqttClient:
             self.mqttDisconnectedCb()
 
     def onHeartbeat(self):
-        Domoticz.Debug("MqttClient::onHeartbeat")
+        #Domoticz.Debug("MqttClient::onHeartbeat")
         if self.mqttConn is None or (not self.mqttConn.Connecting() and not self.mqttConn.Connected() or not self.isConnected):
             Domoticz.Debug("MqttClient::Reconnecting")
             self.Open()
