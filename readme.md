@@ -35,10 +35,12 @@ a. ```machine IP adress```<br>
 b. ```Port number (normally 1883)```<br>
 c. ```Cloud account email adress```<br>
 d. ```Cloud account password```<br>
+e. hit 'update' or 'add' (initial setup) button<br>
  
-2. As a result an email with a verification code (aka OTP code) will be sent to the mail adress specified at c.<br>
+2. As a result an email with a verification code (aka OTP code) will be sent to the mail adress specified at c. Fill in the following fields:<br>
 e. fill in the verification code in ```email verification code```<br>
 f. specify the machine's name (as you did when registering the machine) if you have more than 1 Dyson device in ```Machine name (cloud account)```<br>
+g. hit 'update' button<br>
 
 See the [Wiki](https://github.com/JanJaapKo/DysonPureLink/wiki) page for extended configuration information.
 
