@@ -40,9 +40,9 @@
     <params>
 		<param field="Address" label="IP Address" required="true"/>
 		<param field="Port" label="Port" width="30px" required="true" default="1883"/>
-		<param field="Mode1" label="email verification code" width="75px" default="0"/>
 		<param field="Mode5" label="Cloud account email adress" default="sinterklaas@gmail.com" width="300px" required="false"/>
         <param field="Mode3" label="Cloud account password" required="false" default="" password="true"/>
+		<param field="Mode1" label="email verification code" width="75px" default="0"/>
         <param field="Mode6" label="Machine name (cloud account)" required="false" default=""/>
 		<param field="Mode4" label="Debug" width="75px">
             <options>
