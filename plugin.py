@@ -73,19 +73,16 @@ except ImportError:
 	debug = True
 import json
 import time
-import base64, hashlib
 from mqtt import MqttClient
 from dyson_pure_link_device import DysonPureLinkDevice
 from cloud.account import DysonAccount
-
-#from cloud.fakeCloud import fakeResponse
 
 from value_types import SensorsData, StateData
 
 class DysonPureLinkPlugin:
     #define class variables
     #plugin version
-    version = "4.0.0"
+    version = "4.0.1"
     enabled = False
     mqttClient = None
     #unit numbers for devices to create
@@ -199,27 +196,7 @@ class DysonPureLinkPlugin:
                     setConfigItem(Key="{0}.product_type".format(deviceList[deviceNames[i]].name), Value = deviceList[deviceNames[i]].product_type) #store the product_type
                     Domoticz.Debug('Key="{0}.product_type" , Value = {1}'.format(deviceList[deviceNames[i]].name, deviceList[deviceNames[i]].product_type)) #store the product_type
                     i = i + 1
-       
 
-        #mock the response for testing without 2 step
-        # myResponse = fakeResponse()
-        # deviceList = myResponse.devices()
-        # deviceNames = list(deviceList.keys())
-        # i=0
-        # for device in deviceList:
-            # Domoticz.Debug("found some new devices: " + str(deviceNames) + "first being: " + deviceNames[0])
-            # setConfigItem(Key="{0}.name".format(i), Value = deviceNames[i]) #store the name of the machine
-            # Domoticz.Debug('Key="{0}.name", Value = {1}'.format(i, deviceNames[i])) #store the name of the machine
-            # setConfigItem(Key="{0}.credential".format(deviceList[deviceNames[i]].name), Value = deviceList[deviceNames[i]].credential) #store the credential
-            # Domoticz.Debug('Key="{0}.credential", Value = {1}'.format(deviceList[deviceNames[i]].name, deviceList[deviceNames[i]].credential)) #store the credential
-            # setConfigItem(Key="{0}.serial".format(deviceList[deviceNames[i]].name), Value = deviceList[deviceNames[i]].serial) #store the serial
-            # Domoticz.Debug('Key="{0}.serial", Value =  {1}'.format(deviceList[deviceNames[i]].name, deviceList[deviceNames[i]].serial)) #store the serial
-            # setConfigItem(Key="{0}.product_type".format(deviceList[deviceNames[i]].name), Value = deviceList[deviceNames[i]].product_type) #store the product_type
-            # Domoticz.Debug('Key="{0}.product_type" , Value = {1}'.format(deviceList[deviceNames[i]].name, deviceList[deviceNames[i]].product_type)) #store the product_type
-            # i = i + 1
-        # DumpConfigToLog()
-        #return
-                
         if deviceList == None or len(deviceList)<1:
             Domoticz.Error("No devices found in plugin configuration or Dyson cloud account")
             return
@@ -585,11 +562,11 @@ class DysonPureLinkPlugin:
                     return password, serialNumber, deviceType
         return
         
-    def _hashed_password(self, pwd):
-        """Hash password (found in manual) to a base64 encoded of its sha512 value"""
-        hash = hashlib.sha512()
-        hash.update(pwd.encode('utf-8'))
-        return base64.b64encode(hash.digest()).decode('utf-8')
+    # def _hashed_password(self, pwd):
+        # """Hash password (found in manual) to a base64 encoded of its sha512 value"""
+        # hash = hashlib.sha512()
+        # hash.update(pwd.encode('utf-8'))
+        # return base64.b64encode(hash.digest()).decode('utf-8')
 
     def _setVersion(self, major, minor, patch):
         #set configs
