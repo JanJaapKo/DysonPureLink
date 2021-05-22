@@ -21,8 +21,8 @@ SENSOR_INIT_STATES = ['INIT', 'OFF', 'INV']
 
 class Warnings():
     """Enum for warnings"""
-    FILTER = 'Filter'
-    NONE = 'None'
+    FILTER = 'Filter life exceeded'
+    NONE = 'No warning'
     _warning = None
     
     def __init__(self, warning):
@@ -37,7 +37,7 @@ class Warnings():
 class Errors():
     """enums for error codes returned in state data"""
     NO_ERROR_CODES = ['02C0', '02C9']
-    NO_ERROR = 'No Error'
+    NO_ERROR = 'No error'
     OTHER = 'Error code: '
     _error = None
     
@@ -205,6 +205,8 @@ class SensorsData(object):
 
 class StateData(object):
     """Value type for state data"""
+    error = None
+    error_code = None
     fan_mode = None
     fan_mode_auto = None
     fan_state = None
@@ -215,8 +217,8 @@ class StateData(object):
     focus = None
     filter_life = None
     quality_target = None
-    error_code = None
     warning_code = None
+    warning = None
     heat_mode = None
     heat_state = None
     heat_target = None

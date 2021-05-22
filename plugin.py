@@ -110,6 +110,7 @@ class DysonPureLinkPlugin:
     particlesMatter25Unit = 21
     particlesMatter10Unit = 22
     resetFilterLifeUnit = 23
+    deviceStatusUnit = 24
 
     runCounter = 6
 
@@ -293,6 +294,8 @@ class DysonPureLinkPlugin:
             Domoticz.Device(Name='Heat mode', Unit=self.heatModeUnit, TypeName="Selector Switch", Image=7, Options=Options).Create()
         if self.heatTargetUnit not in Devices:
             Domoticz.Device(Name='Heat target', Unit=self.heatTargetUnit, Type=242, Subtype=1).Create()
+        if self.deviceStatusUnit not in Devices:
+            Domoticz.Device(Name='Machine status', Unit=self.deviceStatusUnit, TypeName="Text", Image=7).Create()
 
         Domoticz.Log("Device instance created: " + str(self.myDevice))
         self.base_topic = self.myDevice.device_base_topic
@@ -452,6 +455,9 @@ class DysonPureLinkPlugin:
             UpdateDevice(self.heatTargetUnit, 0, str(self.state_data.heat_target))
         if self.state_data.heat_state is not None:
             UpdateDevice(self.heatStateUnit, self.state_data.heat_state.state, str((self.state_data.heat_state.state+1)*10))
+        if self.state_data.error is not None and self.state_data.warning is not None:
+            status_string = "Error: {}<br> Warning: {}".format(self.state_data.error, self.state_data.warning)
+            UpdateDevice(self.deviceStatusUnit, 0, status_string)
         Domoticz.Debug("update StateData: " + str(self.state_data))
 
 
