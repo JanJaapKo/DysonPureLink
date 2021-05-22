@@ -82,7 +82,7 @@ from value_types import SensorsData, StateData
 class DysonPureLinkPlugin:
     #define class variables
     #plugin version
-    version = "4.0.1"
+    version = "4.0.2"
     enabled = False
     mqttClient = None
     #unit numbers for devices to create
@@ -109,9 +109,9 @@ class DysonPureLinkPlugin:
     heatStateUnit = 20
     particlesMatter25Unit = 21
     particlesMatter10Unit = 22
+    resetFilterLifeUnit = 23
 
     runCounter = 6
-    pingCounter = 3
 
     def __init__(self):
         self.myDevice = None
@@ -131,7 +131,6 @@ class DysonPureLinkPlugin:
         self.otp_code = Parameters['Mode1']
         self.runCounter = int(Parameters['Mode2'])
         self.log_level = Parameters['Mode4']
-        self.pingCounter = int(self.runCounter/2)
         self.account_password = Parameters['Mode3']
         self.account_email = Parameters['Mode5']
         self.machine_name = Parameters['Mode6']
@@ -252,7 +251,10 @@ class DysonPureLinkPlugin:
         if self.standbyMonitoringUnit not in Devices:
             Domoticz.Device(Name='Standby monitor', Unit=self.standbyMonitoringUnit, Type=244, Subtype=62,Image=7, Switchtype=0).Create()
         if self.filterLifeUnit not in Devices:
-            Domoticz.Device(Name='Remaining filter life', Unit=self.filterLifeUnit, TypeName="Custom").Create()
+            Options: {'Custom': '1;hrs'}
+            Domoticz.Device(Name='Remaining filter life', Unit=self.filterLifeUnit, TypeName="Custom", Options=Options).Create()
+        if self.resetFilterLifeUnit not in Devices:
+            Domoticz.Device(Name='Reset filter: 0 hrs', Unit=self.resetFilterLifeUnit, TypeName="Switch", Image=9).Create()
         if self.tempHumUnit not in Devices:
             Domoticz.Device(Name='Temperature and Humidity', Unit=self.tempHumUnit, TypeName="Temp+Hum").Create()
         if self.volatileUnit not in Devices:
@@ -366,6 +368,9 @@ class DysonPureLinkPlugin:
             topic, payload = self.myDevice.set_heat_mode(arg) 
         if Unit == self.heatTargetUnit:
             topic, payload = self.myDevice.set_heat_target(Level) 
+        if Unit == self.resetFilterLifeUnit:
+            UpdateDevice(self.resetFilterLifeUnit,1,"On") #acknowlegde switching on
+            topic, payload = self.myDevice.reset_filter()
 
         self.mqttClient.Publish(topic, payload)
 
@@ -385,14 +390,9 @@ class DysonPureLinkPlugin:
     def onHeartbeat(self):
         if self.myDevice != None:
             self.runCounter = self.runCounter - 1
-            # self.pingCounter = self.pingCounter - 1
-            # if self.pingCounter <= 0 and self.runCounter > 0:
-                # self.mqttClient.onHeartbeat()
-                # self.pingCounter = int(int(Parameters['Mode2'])/2)
             if self.runCounter <= 0:
                 Domoticz.Debug("DysonPureLink plugin: Poll unit")
                 self.runCounter = int(Parameters['Mode2'])
-                #self.pingCounter = int(int(Parameters['Mode2'])/2)
                 topic, payload = self.myDevice.request_state()
                 self.mqttClient.Publish(topic, payload) #ask for update of current status
                 
@@ -435,6 +435,9 @@ class DysonPureLinkPlugin:
             UpdateDevice(self.fanStateUnit, self.state_data.fan_state.state, str((self.state_data.fan_state.state+1)*10))
         if self.state_data.filter_life is not None:
             UpdateDevice(self.filterLifeUnit, self.state_data.filter_life, str(self.state_data.filter_life))
+        if self.state_data.filter_life is not None:
+            nameBase, curValue = Devices[self.resetFilterLifeUnit].Name.split(":")
+            UpdateDevice(self.resetFilterLifeUnit, 0, "Off", Name = nameBase + ": " + str(self.state_data.filter_life) + " hrs")
         if self.state_data.quality_target is not None:
             UpdateDevice(self.qualityTargetUnit, self.state_data.quality_target.state, str((self.state_data.quality_target.state+1)*10))
         if self.state_data.standby_monitoring is not None:
@@ -477,7 +480,6 @@ class DysonPureLinkPlugin:
             UpdateDevice(self.heatTargetUnit, self.sensor_data.heat_target, str(self.sensor_data.heat_target))
         UpdateDevice(self.sleepTimeUnit, self.sensor_data.sleep_timer, str(self.sensor_data.sleep_timer))
         Domoticz.Debug("update SensorData: " + str(self.sensor_data))
-        #Domoticz.Debug("update StateData: " + str(self.state_data))
 
     def onMQTTConnected(self):
         """connection to device established"""
@@ -562,12 +564,6 @@ class DysonPureLinkPlugin:
                     return password, serialNumber, deviceType
         return
         
-    # def _hashed_password(self, pwd):
-        # """Hash password (found in manual) to a base64 encoded of its sha512 value"""
-        # hash = hashlib.sha512()
-        # hash.update(pwd.encode('utf-8'))
-        # return base64.b64encode(hash.digest()).decode('utf-8')
-
     def _setVersion(self, major, minor, patch):
         #set configs
         Domoticz.Debug("Setting version to {0}.{1}.{2}".format(major, minor, patch))
@@ -616,14 +612,20 @@ def setConfigItem(Key=None, Value=None):
        Domoticz.Error("Domoticz.Configuration operation failed: '"+str(inst)+"'")
     return Config
        
-def UpdateDevice(Unit, nValue, sValue, BatteryLevel=255, AlwaysUpdate=False):
+def UpdateDevice(Unit, nValue, sValue, BatteryLevel=255, AlwaysUpdate=False, Name=""):
     if Unit not in Devices: return
+    newName=Name
+    if Devices[Unit].Name != Name and Name != "":
+        newName=Name
+    else:
+        newName = Devices[Unit].Name
     if Devices[Unit].nValue != nValue\
         or Devices[Unit].sValue != sValue\
         or Devices[Unit].BatteryLevel != BatteryLevel\
-        or AlwaysUpdate == True:
-
-        Devices[Unit].Update(nValue, str(sValue), BatteryLevel=BatteryLevel)
+        or AlwaysUpdate == True\
+        or (newName != "" and newName != Devices[Unit].Name):
+        
+        Devices[Unit].Update(nValue, str(sValue), BatteryLevel=BatteryLevel, Name=newName)
 
         Domoticz.Debug("Update %s: nValue %s - sValue %s - BatteryLevel %s" % (
             Devices[Unit].Name,
@@ -631,7 +633,7 @@ def UpdateDevice(Unit, nValue, sValue, BatteryLevel=255, AlwaysUpdate=False):
             sValue,
             BatteryLevel
         ))
-        
+
 global _plugin
 _plugin = DysonPureLinkPlugin()
 

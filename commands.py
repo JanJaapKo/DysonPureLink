@@ -108,6 +108,11 @@ class DysonCommands(object):
         command = self._create_command({'hmax': arg})
         return(self.device_command, command);
 
+    def reset_filter(self):
+        """Sends the command to reset the filter life counter"""
+        command = self._create_command({'rstf': 'RSTF'})
+        return(self.device_command, command);
+
 class HeatTarget:
     """Heat Target for fan. Note dyson uses kelvin as the temperature unit."""
 
