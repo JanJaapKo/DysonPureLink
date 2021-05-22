@@ -19,6 +19,36 @@ DISCONNECTION_STATE = {
 
 SENSOR_INIT_STATES = ['INIT', 'OFF', 'INV']
 
+class Warnings():
+    """Enum for warnings"""
+    FILTER = 'Filter'
+    NONE = 'None'
+    _warning = None
+    
+    def __init__(self, warning):
+        """go from string to warning object"""
+        if warning.upper() == 'FLTR': self._warning = self.FILTER
+        else: 
+            self._warning = self.NONE
+    
+    def __repr__(self):
+        return self._warning
+
+class Errors():
+    """enums for error codes returned in state data"""
+    NO_ERROR_CODES = ['02C0', '02C9']
+    NO_ERROR = 'No Error'
+    OTHER = 'Error code: '
+    _error = None
+    
+    def __init__(self, error):
+        self._code = error
+        if error in self.NO_ERROR_CODES: self._error = self.NO_ERROR
+        else: self._error = self.OTHER
+        
+    def __repr__(self):
+        error_text = self._error if self._error == self.NO_ERROR else self.OTHER + self._code
+        return error_text
 
 class FanMode():
     """Enum for fan mode"""
@@ -162,7 +192,7 @@ class SensorsData(object):
         else:
             particles = None
 
-        return 'SensorsData: Temperature: {0} C, Humidity: {1} %, Volatile Compounds: {2}, Particles: {3}, sleep timer: {4}'.format(
+        return 'SensorsData: Temperature: {:.1f} C, Humidity: {} %, Volatile Compounds: {}, Particles: {}, sleep timer: {}'.format(
             self.temperature, self.humidity, self.volatile_compounds, particles, self.sleep_timer)
 
     @property
@@ -240,12 +270,14 @@ class StateData(object):
             self.oscillation_angle_high = self._get_field_value(data['osau']) #0000 - 9999 ?
 
         self.error_code = self._get_field_value(data['ercd']) #I think this is an errorcode: NONE when filter needs replacement
+        self.error = Errors(self.error_code)
         self.warning_code = self._get_field_value(data['wacd']) #I think this is Warning: FLTR when filter needs replacement
+        self.warning = Warnings(self.warning_code)
 
     def __repr__(self):
         """Return a String representation"""
-        return 'StateData: Fan mode: {0} + state: {1}, speed: {2}, AirQual target: {3} night mode: {4}, Oscillation: {5}, Filter life: {6}, Standby monitoring: {7}, ErrCode: {8}'.format(
-            self.fan_mode, self.fan_state, self.fan_speed, self.quality_target, self.night_mode, self.oscillation, self.filter_life, self.standby_monitoring, self.error_code)
+        return 'StateData: Fan mode: {0} + state: {1}, speed: {2}, AirQual target: {3} night mode: {4}, Oscillation: {5}, Filter life: {6}, Standby monitoring: {7}, error: {8}, warning: {9}'.format(
+            self.fan_mode, self.fan_state, self.fan_speed, self.quality_target, self.night_mode, self.oscillation, self.filter_life, self.standby_monitoring, self.error, self.warning)
 
     @property
     def has_data(self):
