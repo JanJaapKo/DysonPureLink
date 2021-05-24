@@ -485,7 +485,10 @@ class DysonPureLinkPlugin:
         if self.sensor_data.heat_target is not None:
             UpdateDevice(self.heatTargetUnit, self.sensor_data.heat_target, str(self.sensor_data.heat_target))
         UpdateDevice(self.sleepTimeUnit, self.sensor_data.sleep_timer, str(self.sensor_data.sleep_timer))
-        Domoticz.Debug("update SensorData: " + str(self.sensor_data))
+        if self.sensor_data.has_data:
+            Domoticz.Debug("update SensorData: " + str(self.sensor_data))
+        else:
+            Domoticz.Debug("partial SensorData to update")
 
     def onMQTTConnected(self):
         """connection to device established"""

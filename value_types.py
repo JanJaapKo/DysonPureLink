@@ -155,6 +155,9 @@ class SensorsData(object):
     heat_target = None
     
     def __init__(self, message):
+    
+    #'data': {'tact': 'OFF', 'hact': 'OFF', 'pact': '0000', 'vact': '0003', 'sltm': 'OFF'}}
+    
         data = message['data']
         humidity = data['hact']
         temperature = data['tact']
@@ -190,14 +193,14 @@ class SensorsData(object):
         elif self.particulate_matter_25 is not None:
             particles = "PM 25: {0}, PM 10: {1}".format(self.particulate_matter_25, self.particulate_matter_10)
         else:
-            particles = None
+            particles = "no measurement"
 
         return 'SensorsData: Temperature: {:.1f} C, Humidity: {} %, Volatile Compounds: {}, Particles: {}, sleep timer: {}'.format(
             self.temperature, self.humidity, self.volatile_compounds, particles, self.sleep_timer)
 
     @property
     def has_data(self):
-        return self.temperature is not None or self.humidity is not None
+        return self.temperature is not None and self.humidity is not None
 
     @staticmethod
     def is_sensors_data(message):
