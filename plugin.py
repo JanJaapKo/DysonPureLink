@@ -82,7 +82,7 @@ from value_types import SensorsData, StateData
 class DysonPureLinkPlugin:
     #define class variables
     #plugin version
-    version = "4.0.2"
+    version = "4.0.3"
     enabled = False
     mqttClient = None
     #unit numbers for devices to create
