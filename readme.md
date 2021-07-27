@@ -32,14 +32,15 @@ git pull https://github.com/JanJaapKo/DysonPureLink
 
 ## Configuration
 At first setup, the plugin needs to connect to the Dyson cloud provider to get the credentials to acces the machine. Since early 2021 a 2-factor authentication is needed, which leads to a 2 step setup according the steps below.
-1. fill in the following parameters:<br>
+1. make sure to login to your cloud account viua the Dyson app
+2. fill in the following parameters:<br>
 a. ```machine IP adress```<br>
 b. ```Port number (normally 1883)```<br>
 c. ```Cloud account email adress```<br>
 d. ```Cloud account password```<br>
 e. hit 'update' or 'add' (initial setup) button<br>
  
-2. As a result an email with a verification code (aka OTP code) will be sent to the mail adress specified at c. Fill in the following fields:<br>
+3. As a result an email with a verification code (aka OTP code) will be sent to the mail adress specified at c. Fill in the following fields:<br>
 e. fill in the verification code in ```email verification code```<br>
 f. specify the machine's name (as you did when registering the machine) if you have more than 1 Dyson device in ```Machine name (cloud account)```<br>
 g. hit 'update' button<br>
