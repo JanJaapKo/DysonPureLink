@@ -102,18 +102,22 @@ class DysonAccount:
         Domoticz.Debug("building request: method {0}, path {1}, params {2}, data {3}, auth {4}".format(method, path, params, data, self._auth if auth else None))
         if auth and self._auth is None:
             raise DysonAuthRequired
-        try:
-            response = requests.request(
-                method,
-                self._HOST + path,
-                params=params,
-                json=data,
-                headers=DYSON_API_HEADERS,
-                auth=self._auth if auth else None,
-                verify=DYSON_CERT,
-            )
-        except requests.RequestException:
-            raise DysonNetworkError
+        #try:
+        response = requests.request(
+            method,
+            self._HOST + path,
+            params=params,
+            json=data,
+            headers=DYSON_API_HEADERS,
+            auth=self._auth if auth else None,
+            verify=True,
+            #verify=DYSON_CERT,
+            timeout=5
+        )
+        #except requests.RequestException:
+        Domoticz.Debug("failed request: method {0}, path {1}, params {2}, data {3}, auth {4}".format(method, path, params, data, self._auth if auth else None))
+        Domoticz.Debug("failed request: '" + str(response.status_code) + "' response body: '"+str(response.json())+"'")
+        #raise DysonNetworkError
         if response.status_code  != requests.codes.ok:
             Domoticz.Error("Dyson request failed: '" +str(response.status_code)+", " +str(response.reason)+"'")
         if response.status_code in [401, 403]:
@@ -131,7 +135,7 @@ class DysonAccount:
             API_PATH_USER_STATUS,
             params={"country": region},
             data={"email": email},
-            auth=False,
+            auth=False
         )
         account_status = response.json()["accountStatus"]
         if account_status != "ACTIVE":
@@ -142,7 +146,7 @@ class DysonAccount:
             API_PATH_EMAIL_REQUEST,
             params={"country": region, "culture": "en-US"},
             data={"email": email},
-            auth=False,
+            auth=False
         )
         if response.status_code == 429:
             raise DysonOTPTooFrequently
@@ -161,7 +165,7 @@ class DysonAccount:
                 "challengeId": challenge_id,
                 "otpCode": otp_code,
             },
-            auth=False,
+            auth=False
         )
         if response.status_code == 400:
             raise DysonLoginFailure
@@ -197,7 +201,7 @@ class DysonAccountCN(DysonAccount):
             "POST",
             API_PATH_MOBILE_REQUEST,
             data={"mobile": mobile},
-            auth=False,
+            auth=False
         )
         if response.status_code == 429:
             raise DysonOTPTooFrequently
@@ -213,7 +217,7 @@ class DysonAccountCN(DysonAccount):
                     "challengeId": challenge_id,
                     "otpCode": otp_code,
                 },
-                auth=False,
+                auth=False
             )
             if response.status_code == 400:
                 raise DysonLoginFailure
