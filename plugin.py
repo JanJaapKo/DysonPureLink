@@ -82,7 +82,7 @@ from value_types import SensorsData, StateData
 class DysonPureLinkPlugin:
     #define class variables
     #plugin version
-    version = "4.0.3"
+    version = "4.0.4"
     enabled = False
     mqttClient = None
     #unit numbers for devices to create
@@ -154,7 +154,7 @@ class DysonPureLinkPlugin:
         
         mqtt_client_id = ""
         
-        #create a Dyson account
+        #get list of devices from plugin configuration
         deviceList = self.get_device_names()
 
         if deviceList != None and len(deviceList)>0:
@@ -213,8 +213,12 @@ class DysonPureLinkPlugin:
                     Domoticz.Error("The configured device name '" + self.machine_name + "' was not found in the cloud account. Available options: " + str(list(deviceList)))
                     return
             elif len(deviceList) == 1:
-                self.myDevice = deviceList[list(deviceList)[0]]
-                Domoticz.Log("1 device found in plugin, none configured, assuming we need this one: '" + self.myDevice.name + "'")
+                myDeviceName = deviceList[list(deviceList)[0]]
+                Domoticz.Debug("DeviceList: '" + str(deviceList) + "'")
+                Domoticz.Log("1 device found in plugin, none configured, assuming we need this one: '" + myDeviceName + "'")
+                password, serialNumber, deviceType= self.get_device_config(myDeviceName)
+                Domoticz.Debug("password: {0}, serialNumber: {1}, deviceType: {2}".format(password, serialNumber, deviceType))
+                self.myDevice = DysonPureLinkDevice(password, serialNumber, deviceType, self.machine_name)
             else:
                 #more than 1 device returned in cloud and no name configured, which the the plugin can't handle
                 Domoticz.Error("More than 1 device found in cloud account but no device name given to select. Select and filter one from available options: " + str(list(deviceList)))
@@ -557,7 +561,7 @@ class DysonPureLinkPlugin:
         devices = {}
         for x in Configurations:
             if x.find(".") > -1 and x.split(".")[1] == "name":
-                devices[str(Configurations[x])] = str(Configurations[x])
+                devices[str(x)] = str(Configurations[x])
         return devices
         
     def get_device_config(self, name):
