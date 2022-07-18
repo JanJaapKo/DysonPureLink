@@ -317,7 +317,7 @@ class DysonPureLinkPlugin:
         topic = ''
         payload = ''
         arg = '' 
-        fan_pwr_list = ['438','520','527'] 
+        fan_pwr_list = ['438','520','527', '438E' ] 
         
         if Unit == self.qualityTargetUnit and Level<=100:
             topic, payload = self.myDevice.set_quality_target(Level)
