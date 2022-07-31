@@ -82,7 +82,7 @@ from value_types import SensorsData, StateData
 class DysonPureLinkPlugin:
     #define class variables
     #plugin version
-    version = "4.0.4"
+    version = "4.0.5"
     enabled = False
     mqttClient = None
     #unit numbers for devices to create
@@ -155,10 +155,10 @@ class DysonPureLinkPlugin:
         mqtt_client_id = ""
         
         #get list of devices from plugin configuration
-        deviceList = self.get_device_names()
+        deviceDict = self.get_device_names()
 
-        if deviceList != None and len(deviceList)>0:
-            Domoticz.Debug("Number of devices found in plugin configuration: '"+str(len(deviceList))+"'")
+        if deviceDict != None and len(deviceDict)>0:
+            Domoticz.Debug("Number of devices found in plugin configuration: '"+str(len(deviceDict))+"'")
         else:
             Domoticz.Log("No devices found in plugin configuration, request from Dyson cloud account")
 
@@ -182,46 +182,48 @@ class DysonPureLinkPlugin:
                 setConfigItem(Key="challenge_id", Value = "") #reset challenge id as it is no longer valid
                 Parameters['Mode1'] = "0" #reset the stored otp code
                 #get list of devices info's
-                deviceList = dysonAccount2.devices()
-                deviceNames = list(deviceList.keys())
+                deviceDict = dysonAccount2.devices()
+                deviceNames = list(deviceDict.keys())
                 Domoticz.Log("Received new devices: " + str(deviceNames) + ", they will be stored in plugin configuration")
                 i=0
-                for device in deviceList:
+                for device in deviceDict:
                     setConfigItem(Key="{0}.name".format(i), Value = deviceNames[i]) #store the name of the machine
                     Domoticz.Debug('Key="{0}.name", Value = {1}'.format(i, deviceNames[i])) #store the name of the machine
-                    setConfigItem(Key="{0}.credential".format(deviceList[deviceNames[i]].name), Value = deviceList[deviceNames[i]].credential) #store the credential
-                    Domoticz.Debug('Key="{0}.credential", Value = {1}'.format(deviceList[deviceNames[i]].name, deviceList[deviceNames[i]].credential)) #store the credential
-                    setConfigItem(Key="{0}.serial".format(deviceList[deviceNames[i]].name), Value = deviceList[deviceNames[i]].serial) #store the serial
-                    Domoticz.Debug('Key="{0}.serial", Value =  {1}'.format(deviceList[deviceNames[i]].name, deviceList[deviceNames[i]].serial)) #store the serial
-                    setConfigItem(Key="{0}.product_type".format(deviceList[deviceNames[i]].name), Value = deviceList[deviceNames[i]].product_type) #store the product_type
-                    Domoticz.Debug('Key="{0}.product_type" , Value = {1}'.format(deviceList[deviceNames[i]].name, deviceList[deviceNames[i]].product_type)) #store the product_type
+                    setConfigItem(Key="{0}.credential".format(deviceDict[deviceNames[i]].name), Value = deviceDict[deviceNames[i]].credential) #store the credential
+                    Domoticz.Debug('Key="{0}.credential", Value = {1}'.format(deviceDict[deviceNames[i]].name, deviceDict[deviceNames[i]].credential)) #store the credential
+                    setConfigItem(Key="{0}.serial".format(deviceDict[deviceNames[i]].name), Value = deviceDict[deviceNames[i]].serial) #store the serial
+                    Domoticz.Debug('Key="{0}.serial", Value =  {1}'.format(deviceDict[deviceNames[i]].name, deviceDict[deviceNames[i]].serial)) #store the serial
+                    setConfigItem(Key="{0}.product_type".format(deviceDict[deviceNames[i]].name), Value = deviceDict[deviceNames[i]].product_type) #store the product_type
+                    Domoticz.Debug('Key="{0}.product_type" , Value = {1}'.format(deviceDict[deviceNames[i]].name, deviceDict[deviceNames[i]].product_type)) #store the product_type
                     i = i + 1
 
-        if deviceList == None or len(deviceList)<1:
+        if deviceDict == None or len(deviceDict)<1:
             Domoticz.Error("No devices found in plugin configuration or Dyson cloud account")
             return
         else:
-            Domoticz.Debug("Number of devices in plugin: '"+str(len(deviceList))+"'")
+            Domoticz.Debug("Number of devices in plugin: '"+str(len(deviceDict))+"'")
 
-        if deviceList != None and len(deviceList) > 0:
+        if deviceDict != None and len(deviceDict) > 0:
+            Domoticz.Debug("starting to create device with len(deviceDict) = {0} and self.machine_name = '{1}'".format(len(deviceDict),self.machine_name))
             if len(self.machine_name) > 0:
-                if self.machine_name in deviceList:
+                if self.machine_name in deviceDict:
                     password, serialNumber, deviceType= self.get_device_config(self.machine_name)
                     Domoticz.Debug("password: {0}, serialNumber: {1}, deviceType: {2}".format(password, serialNumber, deviceType))
                     self.myDevice = DysonPureLinkDevice(password, serialNumber, deviceType, self.machine_name)
                 else:
-                    Domoticz.Error("The configured device name '" + self.machine_name + "' was not found in the cloud account. Available options: " + str(list(deviceList)))
+                    Domoticz.Error("The configured device name '" + self.machine_name + "' was not found in the cloud account. Available options: " + str(list(deviceDict)))
                     return
-            elif len(deviceList) == 1:
-                myDeviceName = deviceList[list(deviceList)[0]]
-                Domoticz.Debug("DeviceList: '" + str(deviceList) + "'")
-                Domoticz.Log("1 device found in plugin, none configured, assuming we need this one: '" + myDeviceName + "'")
-                password, serialNumber, deviceType= self.get_device_config(myDeviceName)
+            elif len(deviceDict) == 1:
+                #myDeviceName = deviceDict[list(deviceDict)[0]]
+                myDeviceName = list(deviceDict.keys())
+                Domoticz.Debug("deviceDict: '" + str(deviceDict) + "', myDeviceName: " + str(myDeviceName) + " " + str(type(myDeviceName)))
+                Domoticz.Log("1 device found in plugin, none configured, assuming we need this one: '" + myDeviceName[0] + "'")
+                password, serialNumber, deviceType= self.get_device_config(myDeviceName[0])
                 Domoticz.Debug("password: {0}, serialNumber: {1}, deviceType: {2}".format(password, serialNumber, deviceType))
                 self.myDevice = DysonPureLinkDevice(password, serialNumber, deviceType, self.machine_name)
             else:
                 #more than 1 device returned in cloud and no name configured, which the the plugin can't handle
-                Domoticz.Error("More than 1 device found in cloud account but no device name given to select. Select and filter one from available options: " + str(list(deviceList)))
+                Domoticz.Error("More than 1 device found in cloud account but no device name given to select. Select and filter one from available options: " + str(list(deviceDict)))
                 return
             #the Domoticz connection object takes username and pwd from the Parameters so write them back
             Parameters['Username'] = self.myDevice.serial #take username from account
@@ -561,10 +563,11 @@ class DysonPureLinkPlugin:
         devices = {}
         for x in Configurations:
             if x.find(".") > -1 and x.split(".")[1] == "name":
-                devices[str(x)] = str(Configurations[x])
+                devices[str(Configurations[x])] = x.split(".")[0]
+        Domoticz.Debug("get_device_names, list of configured devices: " + str(devices))
         return devices
         
-    def get_device_config(self, name):
+    def get_device_config(self, name = ""):
         """fetch all relevant config items from Domoticz.Configuration for device with name"""
         Configurations = getConfigItem()
         for x in Configurations:
