@@ -11,7 +11,7 @@ The following Python modules installed
 ```
 sudo apt-get update
 sudo apt-get install python3-requests
-sudo pip3 install crypto
+sudo pip3 install pycryptodome
 ```
 
 ## Installation
