@@ -12,6 +12,9 @@ The following Python modules installed
 sudo apt-get update
 sudo apt-get install python3-requests
 sudo pip3 install pycryptodome
+
+per Debian 12 Bookworm:
+sudo apt install python3-pycryptodome
 ```
 
 ## Installation
