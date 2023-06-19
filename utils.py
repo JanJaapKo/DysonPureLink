@@ -1,7 +1,7 @@
 """Utilities for Dyson Pure Hot+Cool link devices."""
 import json
 import base64
-from Crypto.Cipher import AES
+from Cryptodome.Cipher import AES
 
 def support_heating(product_type):
     """Return True if device_model support heating mode, else False.

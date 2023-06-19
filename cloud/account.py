@@ -1,7 +1,12 @@
 """Dyson cloud account client."""
 
+try:
+	import Domoticz
+	debug = False
+except ImportError:
+	import fakeDomoticz as Domoticz
+	debug = True
 import pathlib
-import Domoticz
 import requests
 from requests.auth import AuthBase, HTTPBasicAuth
 
