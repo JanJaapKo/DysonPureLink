@@ -24,4 +24,4 @@ class DysonPureLinkDevice(commands.DysonCommands):
         return '{0}/{1}'.format(self.product_type, self.serial)
 
     def __repr__(self):
-        return "Dyson device '{0}' with serial '{1}' of type '{2}'".format(self._name, self.serial, self.product_type)
+        return "Dyson device called '{0}' with serial '{1}' of type '{2}'".format(self._name, self.serial, self.product_type)

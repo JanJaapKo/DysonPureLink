@@ -13,7 +13,7 @@
 # Domoticz plugin to handle communction to Dyson devices
 #
 """
-<plugin key="DysonPureLink" name="Dyson Pure Link" author="Jan-Jaap Kostelijk" wikilink="https://github.com/JanJaapKo/DysonPureLink/wiki" externallink="https://github.com/JanJaapKo/DysonPureLink">
+<plugin key="DysonPureLink" name="Dyson Pure Link" author="Jan-Jaap Kostelijk" version="4.0.6" wikilink="https://github.com/JanJaapKo/DysonPureLink/wiki" externallink="https://github.com/JanJaapKo/DysonPureLink">
     <description>
         <h2>Dyson Pure Link plugin</h2><br/>
         Connects to Dyson Pure Link devices.
@@ -81,8 +81,6 @@ from value_types import SensorsData, StateData
 
 class DysonPureLinkPlugin:
     #define class variables
-    #plugin version
-    version = "4.0.5"
     enabled = False
     mqttClient = None
     #unit numbers for devices to create
@@ -146,10 +144,13 @@ class DysonPureLinkPlugin:
             Domoticz.Log("Plugin config will be erased to retreive new cloud account data")
             Config = {}
             Config = Domoticz.Configuration(Config)
+
+        Domoticz.Log("starting plugin version "+Parameters["Version"])
                 
         #PureLink needs polling, get from config
         Domoticz.Heartbeat(10)
         
+        self.version = Parameters["Version"]
         self.checkVersion(self.version)
         
         mqtt_client_id = ""
@@ -218,6 +219,7 @@ class DysonPureLinkPlugin:
                 myDeviceName = list(deviceDict.keys())
                 Domoticz.Debug("deviceDict: '" + str(deviceDict) + "', myDeviceName: " + str(myDeviceName) + " " + str(type(myDeviceName)))
                 Domoticz.Log("1 device found in plugin, none configured, assuming we need this one: '" + myDeviceName[0] + "'")
+                self.machine_name = myDeviceName[0]
                 password, serialNumber, deviceType= self.get_device_config(myDeviceName[0])
                 Domoticz.Debug("password: {0}, serialNumber: {1}, deviceType: {2}".format(password, serialNumber, deviceType))
                 self.myDevice = DysonPureLinkDevice(password, serialNumber, deviceType, self.machine_name)
@@ -232,76 +234,7 @@ class DysonPureLinkPlugin:
             Domoticz.Error("No usable credentials found")
             return
 
-        #check, per device, if it is created. If not,create it
-        Options = {"LevelActions" : "|||",
-                   "LevelNames" : "|OFF|ON|AUTO",
-                   "LevelOffHidden" : "true",
-                   "SelectorStyle" : "1"}
-        if self.fanModeUnit not in Devices:
-            Domoticz.Device(Name='Fan mode', Unit=self.fanModeUnit, TypeName="Selector Switch", Image=7, Options=Options).Create()
-        if self.fanStateUnit not in Devices:
-            Domoticz.Device(Name='Fan state', Unit=self.fanStateUnit, Type=244, Subtype=62, Image=7, Switchtype=0).Create()
-        if self.heatStateUnit not in Devices:
-            Domoticz.Device(Name='Heating state', Unit=self.heatStateUnit, Type=244, Subtype=62, Image=7, Switchtype=0).Create()
-        if self.nightModeUnit not in Devices:
-            Domoticz.Device(Name='Night mode', Unit=self.nightModeUnit, Type=244, Subtype=62,  Switchtype=0, Image=9).Create()
-            
-        Options = {"LevelActions" : "|||||||||||",
-            "LevelNames" : "OFF|1|2|3|4|5|6|7|8|9|10|AUTO",
-            "LevelOffHidden" : "false",
-            "SelectorStyle" : "1"}
-        if self.fanSpeedUnit not in Devices:
-            Domoticz.Device(Name='Fan speed', Unit=self.fanSpeedUnit, TypeName="Selector Switch", Image=7, Options=Options).Create()
-
-        if self.fanOscillationUnit not in Devices:
-            Domoticz.Device(Name='Oscilation mode', Unit=self.fanOscillationUnit, Type=244, Subtype=62, Image=7, Switchtype=0).Create()
-        if self.standbyMonitoringUnit not in Devices:
-            Domoticz.Device(Name='Standby monitor', Unit=self.standbyMonitoringUnit, Type=244, Subtype=62,Image=7, Switchtype=0).Create()
-        if self.filterLifeUnit not in Devices:
-            Options: {'Custom': '1;hrs'}
-            Domoticz.Device(Name='Remaining filter life', Unit=self.filterLifeUnit, TypeName="Custom", Options=Options).Create()
-        if self.resetFilterLifeUnit not in Devices:
-            Domoticz.Device(Name='Reset filter: 0 hrs', Unit=self.resetFilterLifeUnit, TypeName="Switch", Image=9).Create()
-        if self.tempHumUnit not in Devices:
-            Domoticz.Device(Name='Temperature and Humidity', Unit=self.tempHumUnit, TypeName="Temp+Hum").Create()
-        if self.volatileUnit not in Devices:
-            Domoticz.Device(Name='Volatile organic', Unit=self.volatileUnit, TypeName="Air Quality").Create()
-        if self.sleepTimeUnit not in Devices:
-            Domoticz.Device(Name='Sleep timer', Unit=self.sleepTimeUnit, TypeName="Custom").Create()
-
-        if self.particlesUnit not in Devices:
-            Domoticz.Device(Name='Dust', Unit=self.particlesUnit, TypeName="Air Quality").Create()
-        if self.qualityTargetUnit not in Devices:
-            Options = {"LevelActions" : "|||",
-                       "LevelNames" : "|Normal|Sensitive (Medium)|Very Sensitive (High)|Off",
-                       "LevelOffHidden" : "true",
-                       "SelectorStyle" : "1"}
-            Domoticz.Device(Name='Air quality setpoint', Unit=self.qualityTargetUnit, TypeName="Selector Switch", Image=7, Options=Options).Create()
-
-        if self.particles2_5Unit not in Devices:
-            Domoticz.Device(Name='Dust (PM 2,5)', Unit=self.particles2_5Unit, TypeName="Air Quality").Create()
-        if self.particles10Unit not in Devices:
-            Domoticz.Device(Name='Dust (PM 10)', Unit=self.particles10Unit, TypeName="Air Quality").Create()
-        if self.particlesMatter25Unit not in Devices:
-            Domoticz.Device(Name='Particles (PM 25)', Unit=self.particlesMatter25Unit, TypeName="Air Quality").Create()
-        if self.particlesMatter10Unit not in Devices:
-            Domoticz.Device(Name='Particles (PM 10)', Unit=self.particlesMatter10Unit, TypeName="Air Quality").Create()
-        if self.fanModeAutoUnit not in Devices:
-            Domoticz.Device(Name='Fan mode auto', Unit=self.fanModeAutoUnit, Type=244, Subtype=62, Image=7, Switchtype=0).Create()
-        if self.fanFocusUnit not in Devices:
-            Domoticz.Device(Name='Fan focus mode', Unit=self.fanFocusUnit, Type=244, Subtype=62, Image=7, Switchtype=0).Create()
-        if self.nitrogenDioxideDensityUnit not in Devices:
-            Domoticz.Device(Name='Nitrogen Dioxide Density (NOx)', Unit=self.nitrogenDioxideDensityUnit, TypeName="Air Quality").Create()
-        if self.heatModeUnit not in Devices:
-            Options = {"LevelActions" : "||",
-                       "LevelNames" : "|Off|Heating",
-                       "LevelOffHidden" : "true",
-                       "SelectorStyle" : "1"}
-            Domoticz.Device(Name='Heat mode', Unit=self.heatModeUnit, TypeName="Selector Switch", Image=7, Options=Options).Create()
-        if self.heatTargetUnit not in Devices:
-            Domoticz.Device(Name='Heat target', Unit=self.heatTargetUnit, Type=242, Subtype=1).Create()
-        if self.deviceStatusUnit not in Devices:
-            Domoticz.Device(Name='Machine status', Unit=self.deviceStatusUnit, TypeName="Text", Image=7).Create()
+        self.createDevices()
 
         Domoticz.Log("Device instance created: " + str(self.myDevice))
         self.base_topic = self.myDevice.device_base_topic
@@ -407,7 +340,7 @@ class DysonPureLinkPlugin:
                 
             else:
                 Domoticz.Debug("Polling unit in " + str(self.runCounter) + " heartbeats.")
-                self.mqttClient.onHeartbeat()
+                #self.mqttClient.onHeartbeat()
 
     def onDeviceRemoved(self, unit):
         Domoticz.Log("DysonPureLink plugin: onDeviceRemoved called for unit '" + str(unit) + "'")
@@ -495,6 +428,155 @@ class DysonPureLinkPlugin:
             Domoticz.Debug("update SensorData: " + str(self.sensor_data))
         else:
             Domoticz.Debug("partial SensorData to update")
+
+    def createDevices(self):
+        #check, per device, if it is created. If not,create it
+        Options = {"LevelActions" : "|||",
+                   "LevelNames" : "|OFF|ON|AUTO",
+                   "LevelOffHidden" : "true",
+                   "SelectorStyle" : "1"}
+        if self.fanModeUnit not in Devices:
+            Domoticz.Device(Name='Fan mode', Unit=self.fanModeUnit, TypeName="Selector Switch", Image=7, Options=Options).Create()
+        if self.fanStateUnit not in Devices:
+            Domoticz.Device(Name='Fan state', Unit=self.fanStateUnit, Type=244, Subtype=62, Image=7, Switchtype=0).Create()
+        if self.heatStateUnit not in Devices:
+            Domoticz.Device(Name='Heating state', Unit=self.heatStateUnit, Type=244, Subtype=62, Image=7, Switchtype=0).Create()
+        if self.nightModeUnit not in Devices:
+            Domoticz.Device(Name='Night mode', Unit=self.nightModeUnit, Type=244, Subtype=62,  Switchtype=0, Image=9).Create()
+            
+        Options = {"LevelActions" : "|||||||||||",
+            "LevelNames" : "OFF|1|2|3|4|5|6|7|8|9|10|AUTO",
+            "LevelOffHidden" : "false",
+            "SelectorStyle" : "1"}
+        if self.fanSpeedUnit not in Devices:
+            Domoticz.Device(Name='Fan speed', Unit=self.fanSpeedUnit, TypeName="Selector Switch", Image=7, Options=Options).Create()
+
+        if self.fanOscillationUnit not in Devices:
+            Domoticz.Device(Name='Oscilation mode', Unit=self.fanOscillationUnit, Type=244, Subtype=62, Image=7, Switchtype=0).Create()
+        if self.standbyMonitoringUnit not in Devices:
+            Domoticz.Device(Name='Standby monitor', Unit=self.standbyMonitoringUnit, Type=244, Subtype=62,Image=7, Switchtype=0).Create()
+        if self.filterLifeUnit not in Devices:
+            Options: {'Custom': '1;hrs'}
+            Domoticz.Device(Name='Remaining filter life', Unit=self.filterLifeUnit, TypeName="Custom", Options=Options).Create()
+        if self.resetFilterLifeUnit not in Devices:
+            Domoticz.Device(Name='Reset filter: 0 hrs', Unit=self.resetFilterLifeUnit, TypeName="Switch", Image=9).Create()
+        if self.tempHumUnit not in Devices:
+            Domoticz.Device(Name='Temperature and Humidity', Unit=self.tempHumUnit, TypeName="Temp+Hum").Create()
+        if self.volatileUnit not in Devices:
+            Domoticz.Device(Name='Volatile organic', Unit=self.volatileUnit, TypeName="Air Quality").Create()
+        if self.sleepTimeUnit not in Devices:
+            Domoticz.Device(Name='Sleep timer', Unit=self.sleepTimeUnit, TypeName="Custom").Create()
+
+        if self.particlesUnit not in Devices:
+            Domoticz.Device(Name='Dust', Unit=self.particlesUnit, TypeName="Air Quality").Create()
+        if self.qualityTargetUnit not in Devices:
+            Options = {"LevelActions" : "|||",
+                       "LevelNames" : "|Normal|Sensitive (Medium)|Very Sensitive (High)|Off",
+                       "LevelOffHidden" : "true",
+                       "SelectorStyle" : "1"}
+            Domoticz.Device(Name='Air quality setpoint', Unit=self.qualityTargetUnit, TypeName="Selector Switch", Image=7, Options=Options).Create()
+
+        if self.particles2_5Unit not in Devices:
+            Domoticz.Device(Name='Dust (PM 2,5)', Unit=self.particles2_5Unit, TypeName="Air Quality").Create()
+        if self.particles10Unit not in Devices:
+            Domoticz.Device(Name='Dust (PM 10)', Unit=self.particles10Unit, TypeName="Air Quality").Create()
+        if self.particlesMatter25Unit not in Devices:
+            Domoticz.Device(Name='Particles (PM 25)', Unit=self.particlesMatter25Unit, TypeName="Air Quality").Create()
+        if self.particlesMatter10Unit not in Devices:
+            Domoticz.Device(Name='Particles (PM 10)', Unit=self.particlesMatter10Unit, TypeName="Air Quality").Create()
+        if self.fanModeAutoUnit not in Devices:
+            Domoticz.Device(Name='Fan mode auto', Unit=self.fanModeAutoUnit, Type=244, Subtype=62, Image=7, Switchtype=0).Create()
+        if self.fanFocusUnit not in Devices:
+            Domoticz.Device(Name='Fan focus mode', Unit=self.fanFocusUnit, Type=244, Subtype=62, Image=7, Switchtype=0).Create()
+        if self.nitrogenDioxideDensityUnit not in Devices:
+            Domoticz.Device(Name='Nitrogen Dioxide Density (NOx)', Unit=self.nitrogenDioxideDensityUnit, TypeName="Air Quality").Create()
+        if self.heatModeUnit not in Devices:
+            Options = {"LevelActions" : "||",
+                       "LevelNames" : "|Off|Heating",
+                       "LevelOffHidden" : "true",
+                       "SelectorStyle" : "1"}
+            Domoticz.Device(Name='Heat mode', Unit=self.heatModeUnit, TypeName="Selector Switch", Image=7, Options=Options).Create()
+        if self.heatTargetUnit not in Devices:
+            Domoticz.Device(Name='Heat target', Unit=self.heatTargetUnit, Type=242, Subtype=1).Create()
+        if self.deviceStatusUnit not in Devices:
+            Domoticz.Device(Name='Machine status', Unit=self.deviceStatusUnit, TypeName="Text", Image=7).Create()
+
+        return True
+
+    def createDevicesEx(self, deviceId):
+        #check, per device, if it is created. If not,create it
+        Options = {"LevelActions" : "|||",
+                   "LevelNames" : "|OFF|ON|AUTO",
+                   "LevelOffHidden" : "true",
+                   "SelectorStyle" : "1"}
+
+        if deviceId not in Devices or (self.fanModeUnit not in Devices[deviceId].Units):
+            Domoticz.Unit(Name='Fan mode', Unit=self.fanModeUnit, TypeName="Selector Switch", Image=7, Options=Options, DeviceID=deviceId).Create()
+        if deviceId not in Devices or (self.fanStateUnit not in Devices[deviceId].Units):
+            Domoticz.Unit(Name='Fan state', Unit=self.fanStateUnit, Type=244, Subtype=62, Image=7, Switchtype=0, DeviceID=deviceId).Create()
+        if deviceId not in Devices or (self.heatStateUnit not in Devices[deviceId].Units):
+            Domoticz.Unit(Name='Heating state', Unit=self.heatStateUnit, Type=244, Subtype=62, Image=7, Switchtype=0, DeviceID=deviceId).Create()
+        if deviceId not in Devices or (self.nightModeUnit not in Devices[deviceId].Units):
+            Domoticz.Unit(Name='Night mode', Unit=self.nightModeUnit, Type=244, Subtype=62,  Switchtype=0, Image=9, DeviceID=deviceId).Create()
+            
+        Options = {"LevelActions" : "|||||||||||",
+            "LevelNames" : "OFF|1|2|3|4|5|6|7|8|9|10|AUTO",
+            "LevelOffHidden" : "false",
+            "SelectorStyle" : "1"}
+        if deviceId not in Devices or (self.fanSpeedUnit not in Devices[deviceId].Units):
+            Domoticz.Unit(Name='Fan speed', Unit=self.fanSpeedUnit, TypeName="Selector Switch", Image=7, Options=Options, DeviceID=deviceId).Create()
+
+        if deviceId not in Devices or (self.fanOscillationUnit not in Devices[deviceId].Units):
+            Domoticz.Unit(Name='Oscilation mode', Unit=self.fanOscillationUnit, Type=244, Subtype=62, Image=7, Switchtype=0, DeviceID=deviceId).Create()
+        if deviceId not in Devices or (self.standbyMonitoringUnit not in Devices[deviceId].Units):
+            Domoticz.Unit(Name='Standby monitor', Unit=self.standbyMonitoringUnit, Type=244, Subtype=62,Image=7, Switchtype=0, DeviceID=deviceId).Create()
+        if deviceId not in Devices or (self.filterLifeUnit not in Devices[deviceId].Units):
+            Options: {'Custom': '1;hrs'}
+            Domoticz.Unit(Name='Remaining filter life', Unit=self.filterLifeUnit, TypeName="Custom", Options=Options, DeviceID=deviceId).Create()
+        if deviceId not in Devices or (self.resetFilterLifeUnit not in Devices[deviceId].Units):
+            Domoticz.Unit(Name='Reset filter: 0 hrs', Unit=self.resetFilterLifeUnit, TypeName="Switch", Image=9, DeviceID=deviceId).Create()
+        if deviceId not in Devices or (self.tempHumUnit not in Devices[deviceId].Units):
+            Domoticz.Unit(Name='Temperature and Humidity', Unit=self.tempHumUnit, TypeName="Temp+Hum", DeviceID=deviceId).Create()
+        if deviceId not in Devices or (self.volatileUnit not in Devices[deviceId].Units):
+            Domoticz.Unit(Name='Volatile organic', Unit=self.volatileUnit, TypeName="Air Quality", DeviceID=deviceId).Create()
+        if deviceId not in Devices or (self.sleepTimeUnit not in Devices[deviceId].Units):
+            Domoticz.Unit(Name='Sleep timer', Unit=self.sleepTimeUnit, TypeName="Custom", DeviceID=deviceId).Create()
+
+        if deviceId not in Devices or (self.particlesUnit not in Devices[deviceId].Units):
+            Domoticz.Unit(Name='Dust', Unit=self.particlesUnit, TypeName="Air Quality", DeviceID=deviceId).Create()
+        if deviceId not in Devices or (self.qualityTargetUnit not in Devices[deviceId].Units):
+            Options = {"LevelActions" : "|||",
+                       "LevelNames" : "|Normal|Sensitive (Medium)|Very Sensitive (High)|Off",
+                       "LevelOffHidden" : "true",
+                       "SelectorStyle" : "1"}
+            Domoticz.Unit(Name='Air quality setpoint', Unit=self.qualityTargetUnit, TypeName="Selector Switch", Image=7, Options=Options, DeviceID=deviceId).Create()
+
+        if deviceId not in Devices or (self.particles2_5Unit not in Devices[deviceId].Units):
+            Domoticz.Unit(Name='Dust (PM 2,5)', Unit=self.particles2_5Unit, TypeName="Air Quality", DeviceID=deviceId).Create()
+        if deviceId not in Devices or (self.particles10Unit not in Devices[deviceId].Units):
+            Domoticz.Unit(Name='Dust (PM 10)', Unit=self.particles10Unit, TypeName="Air Quality", DeviceID=deviceId).Create()
+        if deviceId not in Devices or (self.particlesMatter25Unit not in Devices[deviceId].Units):
+            Domoticz.Unit(Name='Particles (PM 25)', Unit=self.particlesMatter25Unit, TypeName="Air Quality", DeviceID=deviceId).Create()
+        if deviceId not in Devices or (self.particlesMatter10Unit not in Devices[deviceId].Units):
+            Domoticz.Unit(Name='Particles (PM 10)', Unit=self.particlesMatter10Unit, TypeName="Air Quality", DeviceID=deviceId).Create()
+        if deviceId not in Devices or (self.fanModeAutoUnit not in Devices[deviceId].Units):
+            Domoticz.Unit(Name='Fan mode auto', Unit=self.fanModeAutoUnit, Type=244, Subtype=62, Image=7, Switchtype=0, DeviceID=deviceId).Create()
+        if deviceId not in Devices or (self.fanFocusUnit not in Devices[deviceId].Units):
+            Domoticz.Unit(Name='Fan focus mode', Unit=self.fanFocusUnit, Type=244, Subtype=62, Image=7, Switchtype=0, DeviceID=deviceId).Create()
+        if deviceId not in Devices or (self.nitrogenDioxideDensityUnit not in Devices[deviceId].Units):
+            Domoticz.Unit(Name='Nitrogen Dioxide Density (NOx)', Unit=self.nitrogenDioxideDensityUnit, TypeName="Air Quality", DeviceID=deviceId).Create()
+        if deviceId not in Devices or (self.heatModeUnit not in Devices[deviceId].Units):
+            Options = {"LevelActions" : "||",
+                       "LevelNames" : "|Off|Heating",
+                       "LevelOffHidden" : "true",
+                       "SelectorStyle" : "1"}
+            Domoticz.Unit(Name='Heat mode', Unit=self.heatModeUnit, TypeName="Selector Switch", Image=7, Options=Options, DeviceID=deviceId).Create()
+        if deviceId not in Devices or (self.heatTargetUnit not in Devices[deviceId].Units):
+            Domoticz.Unit(Name='Heat target', Unit=self.heatTargetUnit, Type=242, Subtype=1, DeviceID=deviceId).Create()
+        if deviceId not in Devices or (self.deviceStatusUnit not in Devices[deviceId].Units):
+            Domoticz.Unit(Name='Machine status', Unit=self.deviceStatusUnit, TypeName="Text", Image=7, DeviceID=deviceId).Create()
+
+        return True
 
     def onMQTTConnected(self):
         """connection to device established"""
@@ -649,6 +731,23 @@ def UpdateDevice(Unit, nValue, sValue, BatteryLevel=255, AlwaysUpdate=False, Nam
             sValue,
             BatteryLevel
         ))
+def UpdateDeviceEx(Device, Unit, nValue, sValue, AlwaysUpdate=False):
+    # Make sure that the Domoticz device still exists (they can be deleted) before updating it
+    if (Device in Devices and Unit in Devices[Device].Units):
+        if (Devices[Device].Units[Unit].nValue != nValue) or (Devices[Device].Units[Unit].sValue != sValue) or AlwaysUpdate:
+                Domoticz.Log("Updating device '"+Devices[Device].Units[Unit].Name+ "' with current sValue '"+Devices[Device].Units[Unit].sValue+"' to '" +sValue+"'")
+            #try:
+                Devices[Device].Units[Unit].nValue = nValue
+                Devices[Device].Units[Unit].sValue = sValue
+                Devices[Device].Units[Unit].Update()
+                
+                #logging.debug("Update "+str(nValue)+":'"+str(sValue)+"' ("+Devices[Device].Units[Unit].Name+")")
+            # except:
+                # Domoticz.Error("Update of device failed: "+str(Unit)+"!")
+                # logging.error("Update of device failed: "+str(Unit)+"!")
+    else:
+        Domoticz.Error("trying to update a non-existent unit "+str(Unit)+" from device "+str(Device))
+    return
 
 global _plugin
 _plugin = DysonPureLinkPlugin()
