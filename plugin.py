@@ -13,7 +13,7 @@
 # Domoticz plugin to handle communction to Dyson devices
 #
 """
-<plugin key="DysonPureLink" name="Dyson Pure Link" author="Jan-Jaap Kostelijk" version="4.0.6" wikilink="https://github.com/JanJaapKo/DysonPureLink/wiki" externallink="https://github.com/JanJaapKo/DysonPureLink">
+<plugin key="DysonPureLink" name="Dyson Pure Link" author="Jan-Jaap Kostelijk" version="5.0.0" wikilink="https://github.com/JanJaapKo/DysonPureLink/wiki" externallink="https://github.com/JanJaapKo/DysonPureLink">
     <description>
         <h2>Dyson Pure Link plugin</h2><br/>
         Connects to Dyson Pure Link devices.
@@ -66,7 +66,7 @@
 """
 
 try:
-	import Domoticz
+	import DomoticzEx as Domoticz
 	debug = False
 except ImportError:
 	import fakeDomoticz as Domoticz
@@ -234,7 +234,8 @@ class DysonPureLinkPlugin:
             Domoticz.Error("No usable credentials found")
             return
 
-        self.createDevices()
+        #self.createDevices()
+        self.createDevicesEx(self.myDevice.name)
 
         Domoticz.Log("Device instance created: " + str(self.myDevice))
         self.base_topic = self.myDevice.device_base_topic
@@ -247,8 +248,8 @@ class DysonPureLinkPlugin:
     def onStop(self):
         Domoticz.Debug("onStop called")
 
-    def onCommand(self, Unit, Command, Level, Hue):
-        Domoticz.Debug("DysonPureLink plugin: onCommand called for Unit " + str(Unit) + ": Parameter '" + str(Command) + "', Level: " + str(Level))
+    def onCommand(self, DeviceID, Unit, Command, Level, Hue):
+        Domoticz.Debug("DysonPureLink plugin: onCommand called for Device/Unit " + str(DeviceID) + "/" + str(Unit) + ": Parameter '" + str(Command) + "', Level: " + str(Level))
         topic = ''
         payload = ''
         arg = '' 
@@ -311,7 +312,7 @@ class DysonPureLinkPlugin:
         if Unit == self.heatTargetUnit:
             topic, payload = self.myDevice.set_heat_target(Level) 
         if Unit == self.resetFilterLifeUnit:
-            UpdateDevice(self.resetFilterLifeUnit,1,"On") #acknowlegde switching on
+            UpdateDeviceEx(self.myDevice.name, self.resetFilterLifeUnit,1,"On") #acknowlegde switching on
             topic, payload = self.myDevice.reset_filter()
 
         self.mqttClient.Publish(topic, payload)
@@ -342,16 +343,16 @@ class DysonPureLinkPlugin:
                 Domoticz.Debug("Polling unit in " + str(self.runCounter) + " heartbeats.")
                 #self.mqttClient.onHeartbeat()
 
-    def onDeviceRemoved(self, unit):
-        Domoticz.Log("DysonPureLink plugin: onDeviceRemoved called for unit '" + str(unit) + "'")
+    def onDeviceRemoved(self, DeviceID, unit):
+        Domoticz.Log("DysonPureLink plugin: onDeviceRemoved called for unit '" + str(unit) + "' on device '" + str(DeviceID)+"'")
     
     def updateDevices(self):
         """Update the defined devices from incoming mesage info"""
         #update the devices
         if self.state_data.oscillation is not None:
-            UpdateDevice(self.fanOscillationUnit, self.state_data.oscillation.state, str(self.state_data.oscillation))
+            UpdateDeviceEx(self.myDevice.name, self.fanOscillationUnit, self.state_data.oscillation.state, str(self.state_data.oscillation))
         if self.state_data.night_mode is not None:
-            UpdateDevice(self.nightModeUnit, self.state_data.night_mode.state, str(self.state_data.night_mode))
+            UpdateDeviceEx(self.myDevice.name, self.nightModeUnit, self.state_data.night_mode.state, str(self.state_data.night_mode))
 
         # Fan speed  
         if self.state_data.fan_speed is not None:
@@ -369,34 +370,34 @@ class DysonPureLinkPlugin:
                     nValueNew = 0
                     sValueNew = "0"
                     
-            UpdateDevice(self.fanSpeedUnit, nValueNew, sValueNew)
+            UpdateDeviceEx(self.myDevice.name, self.fanSpeedUnit, nValueNew, sValueNew)
         
         if self.state_data.fan_mode is not None:
-            UpdateDevice(self.fanModeUnit, self.state_data.fan_mode.state, str((self.state_data.fan_mode.state+1)*10))
+            UpdateDeviceEx(self.myDevice.name, self.fanModeUnit, self.state_data.fan_mode.state, str((self.state_data.fan_mode.state+1)*10))
         if self.state_data.fan_state is not None:
-            UpdateDevice(self.fanStateUnit, self.state_data.fan_state.state, str((self.state_data.fan_state.state+1)*10))
+            UpdateDeviceEx(self.myDevice.name, self.fanStateUnit, self.state_data.fan_state.state, str((self.state_data.fan_state.state+1)*10))
         if self.state_data.filter_life is not None:
-            UpdateDevice(self.filterLifeUnit, self.state_data.filter_life, str(self.state_data.filter_life))
+            UpdateDeviceEx(self.myDevice.name, self.filterLifeUnit, self.state_data.filter_life, str(self.state_data.filter_life))
         if self.state_data.filter_life is not None:
-            nameBase, curValue = Devices[self.resetFilterLifeUnit].Name.split(":")
-            UpdateDevice(self.resetFilterLifeUnit, 0, "Off", Name = nameBase + ": " + str(self.state_data.filter_life) + " hrs")
+            nameBase, curValue = Devices[self.myDevice.name].Units[self.resetFilterLifeUnit].Name.split(":")
+            UpdateDeviceEx(self.myDevice.name, self.resetFilterLifeUnit, 0, "Off", Name = nameBase + ": " + str(self.state_data.filter_life) + " hrs")
         if self.state_data.quality_target is not None:
-            UpdateDevice(self.qualityTargetUnit, self.state_data.quality_target.state, str((self.state_data.quality_target.state+1)*10))
+            UpdateDeviceEx(self.myDevice.name, self.qualityTargetUnit, self.state_data.quality_target.state, str((self.state_data.quality_target.state+1)*10))
         if self.state_data.standby_monitoring is not None:
-            UpdateDevice(self.standbyMonitoringUnit, self.state_data.standby_monitoring.state, str((self.state_data.standby_monitoring.state+1)*10))
+            UpdateDeviceEx(self.myDevice.name, self.standbyMonitoringUnit, self.state_data.standby_monitoring.state, str((self.state_data.standby_monitoring.state+1)*10))
         if self.state_data.fan_mode_auto is not None:
-            UpdateDevice(self.fanModeAutoUnit, self.state_data.fan_mode_auto.state, str((self.state_data.fan_mode_auto.state+1)*10))
+            UpdateDeviceEx(self.myDevice.name, self.fanModeAutoUnit, self.state_data.fan_mode_auto.state, str((self.state_data.fan_mode_auto.state+1)*10))
         if self.state_data.focus is not None:
-            UpdateDevice(self.fanFocusUnit, self.state_data.focus.state, str(self.state_data.focus))
+            UpdateDeviceEx(self.myDevice.name, self.fanFocusUnit, self.state_data.focus.state, str(self.state_data.focus))
         if self.state_data.heat_mode is not None:
-            UpdateDevice(self.heatModeUnit, self.state_data.heat_mode.state, str((self.state_data.heat_mode.state+1)*10))
+            UpdateDeviceEx(self.myDevice.name, self.heatModeUnit, self.state_data.heat_mode.state, str((self.state_data.heat_mode.state+1)*10))
         if self.state_data.heat_target is not None:
-            UpdateDevice(self.heatTargetUnit, 0, str(self.state_data.heat_target))
+            UpdateDeviceEx(self.myDevice.name, self.heatTargetUnit, 0, str(self.state_data.heat_target))
         if self.state_data.heat_state is not None:
-            UpdateDevice(self.heatStateUnit, self.state_data.heat_state.state, str((self.state_data.heat_state.state+1)*10))
+            UpdateDeviceEx(self.myDevice.name, self.heatStateUnit, self.state_data.heat_state.state, str((self.state_data.heat_state.state+1)*10))
         if self.state_data.error is not None and self.state_data.warning is not None:
             status_string = "Error: {}<br> Warning: {}".format(self.state_data.error, self.state_data.warning)
-            UpdateDevice(self.deviceStatusUnit, 0, status_string)
+            UpdateDeviceEx(self.myDevice.name, self.deviceStatusUnit, 0, status_string)
         Domoticz.Debug("update StateData: " + str(self.state_data))
 
 
@@ -406,24 +407,24 @@ class DysonPureLinkPlugin:
         if self.sensor_data.temperature is not None and self.sensor_data.humidity is not None :
             tempNum = int(self.sensor_data.temperature)
             humNum = int(self.sensor_data.humidity)
-            UpdateDevice(self.tempHumUnit, 1, str(self.sensor_data.temperature)[:4] +';'+ str(self.sensor_data.humidity) + ";1")
+            UpdateDeviceEx(self.myDevice.name, self.tempHumUnit, 1, str(self.sensor_data.temperature)[:4] +';'+ str(self.sensor_data.humidity) + ";1")
         if self.sensor_data.volatile_compounds is not None:
-            UpdateDevice(self.volatileUnit, self.sensor_data.volatile_compounds, str(self.sensor_data.volatile_compounds))
+            UpdateDeviceEx(self.myDevice.name, self.volatileUnit, self.sensor_data.volatile_compounds, str(self.sensor_data.volatile_compounds))
         if self.sensor_data.particles is not None:
-            UpdateDevice(self.particlesUnit, self.sensor_data.particles, str(self.sensor_data.particles))
+            UpdateDeviceEx(self.myDevice.name, self.particlesUnit, self.sensor_data.particles, str(self.sensor_data.particles))
         if self.sensor_data.particles2_5 is not None:
-            UpdateDevice(self.particles2_5Unit, self.sensor_data.particles2_5, str(self.sensor_data.particles2_5))
+            UpdateDeviceEx(self.myDevice.name, self.particles2_5Unit, self.sensor_data.particles2_5, str(self.sensor_data.particles2_5))
         if self.sensor_data.particles10 is not None:
-            UpdateDevice(self.particles10Unit, self.sensor_data.particles10, str(self.sensor_data.particles10))
+            UpdateDeviceEx(self.myDevice.name, self.particles10Unit, self.sensor_data.particles10, str(self.sensor_data.particles10))
         if self.sensor_data.particulate_matter_25 is not None:
-            UpdateDevice(self.particlesMatter25Unit, self.sensor_data.particulate_matter_25, str(self.sensor_data.particulate_matter_25))
+            UpdateDeviceEx(self.myDevice.name, self.particlesMatter25Unit, self.sensor_data.particulate_matter_25, str(self.sensor_data.particulate_matter_25))
         if self.sensor_data.particulate_matter_10 is not None:
-            UpdateDevice(self.particlesMatter10Unit, self.sensor_data.particulate_matter_10, str(self.sensor_data.particulate_matter_10))
+            UpdateDeviceEx(self.myDevice.name, self.particlesMatter10Unit, self.sensor_data.particulate_matter_10, str(self.sensor_data.particulate_matter_10))
         if self.sensor_data.nitrogenDioxideDensity is not None:
-            UpdateDevice(self.nitrogenDioxideDensityUnit, self.sensor_data.nitrogenDioxideDensity, str(self.sensor_data.nitrogenDioxideDensity))
+            UpdateDeviceEx(self.myDevice.name, self.nitrogenDioxideDensityUnit, self.sensor_data.nitrogenDioxideDensity, str(self.sensor_data.nitrogenDioxideDensity))
         if self.sensor_data.heat_target is not None:
-            UpdateDevice(self.heatTargetUnit, self.sensor_data.heat_target, str(self.sensor_data.heat_target))
-        UpdateDevice(self.sleepTimeUnit, self.sensor_data.sleep_timer, str(self.sensor_data.sleep_timer))
+            UpdateDeviceEx(self.myDevice.name, self.heatTargetUnit, self.sensor_data.heat_target, str(self.sensor_data.heat_target))
+        UpdateDeviceEx(self.myDevice.name, self.sleepTimeUnit, self.sensor_data.sleep_timer, str(self.sensor_data.sleep_timer))
         if self.sensor_data.has_data:
             Domoticz.Debug("update SensorData: " + str(self.sensor_data))
         else:
@@ -629,6 +630,8 @@ class DysonPureLinkPlugin:
         if int(MaConf) < int(MaCurrent):
             Domoticz.Log("Major version upgrade: {0} -> {1}".format(MaConf,MaCurrent))
             #add code to perform MAJOR upgrades
+            if int(MaConf) < 5:
+                can_continue = self.updateToEx()
         elif int(MiConf) < int(MiCurrent):
             Domoticz.Log("Minor version upgrade: {0} -> {1}".format(MiConf,MiCurrent))
             #add code to perform MINOR upgrades
@@ -638,6 +641,16 @@ class DysonPureLinkPlugin:
         if ConfVersion != version:
             #store new version info
             self._setVersion(MaCurrent,MiCurrent,PaCurrent)
+
+    def updateToEx(self):
+        """routine to check if we can update to the Domoticz extended plugin framework"""
+        if len(Devices)>0:
+            Domoticz.Error("Devices are present in legacy version. Extra devices will be created!")
+            Domoticz.Error("Check replacing devices in plugin wiki")
+            return True
+        else:
+            return True
+
             
     def get_device_names(self):
         """find the amount of stored devices"""
@@ -731,7 +744,7 @@ def UpdateDevice(Unit, nValue, sValue, BatteryLevel=255, AlwaysUpdate=False, Nam
             sValue,
             BatteryLevel
         ))
-def UpdateDeviceEx(Device, Unit, nValue, sValue, AlwaysUpdate=False):
+def UpdateDeviceEx(Device, Unit, nValue, sValue, AlwaysUpdate=False, Name=""):
     # Make sure that the Domoticz device still exists (they can be deleted) before updating it
     if (Device in Devices and Unit in Devices[Device].Units):
         if (Devices[Device].Units[Unit].nValue != nValue) or (Devices[Device].Units[Unit].sValue != sValue) or AlwaysUpdate:
@@ -739,6 +752,8 @@ def UpdateDeviceEx(Device, Unit, nValue, sValue, AlwaysUpdate=False):
             #try:
                 Devices[Device].Units[Unit].nValue = nValue
                 Devices[Device].Units[Unit].sValue = sValue
+                if Name != "":
+                    Devices[Device].Units[Unit].Name = Name
                 Devices[Device].Units[Unit].Update()
                 
                 #logging.debug("Update "+str(nValue)+":'"+str(sValue)+"' ("+Devices[Device].Units[Unit].Name+")")
@@ -784,9 +799,9 @@ def onHeartbeat():
     global _plugin
     _plugin.onHeartbeat()
 
-def onDeviceRemoved(Unit):
+def onDeviceRemoved(DeviceID, Unit):
     global _plugin
-    _plugin.onDeviceRemoved(Unit)
+    _plugin.onDeviceRemoved(DeviceID, Unit)
 
     # Generic helper functions
 def DumpConfigToLog():

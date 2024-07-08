@@ -1,7 +1,7 @@
 """Dyson cloud account client."""
 
 try:
-	import Domoticz
+	import DomoticzEx as Domoticz
 	debug = False
 except ImportError:
 	import fakeDomoticz as Domoticz

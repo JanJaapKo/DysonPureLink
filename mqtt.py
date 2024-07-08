@@ -1,6 +1,6 @@
 # Based on https://github.com/emontnemery/domoticz_mqtt_discovery
 try:
-	import Domoticz
+	import DomoticzEx as Domoticz
 	debug = False
 except ImportError:
 	import fakeDomoticz as Domoticz
