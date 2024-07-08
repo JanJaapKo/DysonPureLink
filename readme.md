@@ -1,6 +1,11 @@
 # Dyson Pure Link - Domoticz Python plugin
 Domoticz plugin to integrate the Dyson PureLink devices
 
+## Upgrade notes:
+As of plugin version 5, it is using the Extended Plugin framework. As a result, new devices will be created . If you want to preserve history, timers etc, you have to merge them with the old ones. Follow the below steps:
+1. upgrade plugin following instructions below
+2. follow instructions on 
+
 ## Prerequisites
 
 - Requires Domoticz version V4.10548 or later (due to password hashing).
