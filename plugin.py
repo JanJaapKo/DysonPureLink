@@ -13,7 +13,7 @@
 # Domoticz plugin to handle communction to Dyson devices
 #
 """
-<plugin key="DysonPureLink" name="Dyson Pure Link" author="Jan-Jaap Kostelijk" version="5.0.1" wikilink="https://github.com/JanJaapKo/DysonPureLink/wiki" externallink="https://github.com/JanJaapKo/DysonPureLink">
+<plugin key="DysonPureLink" name="Dyson Pure Link" author="Jan-Jaap Kostelijk" version="5.0.2" wikilink="https://github.com/JanJaapKo/DysonPureLink/wiki" externallink="https://github.com/JanJaapKo/DysonPureLink">
     <description>
         <h2>Dyson Pure Link plugin</h2><br/>
         Connects to Dyson Pure Link devices.
@@ -78,6 +78,8 @@ from dyson_pure_link_device import DysonPureLinkDevice
 from cloud.account import DysonAccount
 
 from value_types import SensorsData, StateData
+
+PING_COUNT = 6
 
 class DysonPureLinkPlugin:
     #define class variables
@@ -149,6 +151,7 @@ class DysonPureLinkPlugin:
                 
         #PureLink needs polling, get from config
         Domoticz.Heartbeat(10)
+        self.pingCounter = PING_COUNT # ping every minute
         
         self.version = Parameters["Version"]
         self.checkVersion(self.version)
@@ -338,10 +341,14 @@ class DysonPureLinkPlugin:
                 self.runCounter = int(Parameters['Mode2'])
                 topic, payload = self.myDevice.request_state()
                 self.mqttClient.Publish(topic, payload) #ask for update of current status
+
+            Domoticz.Debug("Polling unit in " + str(self.runCounter) + " heartbeats.")
                 
-            else:
-                Domoticz.Debug("Polling unit in " + str(self.runCounter) + " heartbeats.")
-                #self.mqttClient.onHeartbeat()
+            self.pingCounter = self.pingCounter - 1
+            if self.pingCounter <= 0:
+                Domoticz.Debug("DysonPureLink plugin: Ping unit")
+                self.pingCounter = PING_COUNT
+                self.mqttClient.onHeartbeat()
 
     def onDeviceRemoved(self, DeviceID, unit):
         Domoticz.Log("DysonPureLink plugin: onDeviceRemoved called for unit '" + str(unit) + "' on device '" + str(DeviceID)+"'")
