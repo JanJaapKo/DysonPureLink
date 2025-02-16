@@ -121,7 +121,12 @@ class DysonAccount:
         )
         #except requests.RequestException:
         Domoticz.Debug("failed request: method {0}, path {1}, params {2}, data {3}, auth {4}".format(method, path, params, data, self._auth if auth else None))
-        Domoticz.Debug("failed request: '" + str(response.status_code) + "' response body: '"+str(response.json())+"'")
+        #Domoticz.Debug("failed request: '" + str(response.status_code) + "' response body: '"+str(response.json())+"'")
+        Domoticz.Debug("failed request: '" + str(response.status_code) + "'")
+        try:
+            Domoticz.Debug("failed request response body: '"+str(response.json())+"'")
+        except:
+            Domoticz.Debug("failed request, no response body")
         #raise DysonNetworkError
         if response.status_code  != requests.codes.ok:
             Domoticz.Error("Dyson request failed: '" +str(response.status_code)+", " +str(response.reason)+"'")
