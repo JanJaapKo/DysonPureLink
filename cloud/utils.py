@@ -6,8 +6,8 @@ import json
 #from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 #from cryptography import Cipher, algorithms, modes
 #from Crypto.hazmat.primitives.ciphers import Cipher, algorithms, modes
-#from Crypto import Cipher
-from Cryptodome import Cipher
+from Crypto import Cipher
+#from Cryptodome import Cipher
 
 DYSON_ENCRYPTION_KEY = (
     b"\x01\x02\x03\x04\x05\x06\x07\x08\t\n\x0b\x0c\r\x0e\x0f\x10"
