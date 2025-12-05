@@ -12,15 +12,19 @@ As of plugin version 5, it is using the Extended Plugin framework. As a result, 
 - Follow the Domoticz guide on [Using Python Plugins](https://www.domoticz.com/wiki/Using_Python_plugins) to enable the plugin framework.
 - Requires a Dyson account to fetch login details for your machine from (created during registration of the machine) on [My Dyson](https://www.dyson.com/your-dyson)
 
-The following Python modules installed
+The following (Python) modules installed
 ```
 sudo apt-get update
 sudo apt-get install python3-requests
+sudo apt-get -y install python3-dev
+sudo apt-get -y install build-essential
 sudo pip3 install pycryptodome
 
-per Debian 12 Bookworm:
+per Debian 12 Bookworm (not needed when using docker):
 sudo apt install python3-pycryptodome
 ```
+Make sure you have the Dyson app open on the screen of your mobile when you add/enable the hardware in Domoticz.
+You may have to restart domoticz after filling in the email activation code.
 
 ## Installation
 
